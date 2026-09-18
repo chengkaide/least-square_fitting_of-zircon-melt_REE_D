@@ -3,4 +3,6 @@
 
 # 构建 / 测试临时产物
 ZirconREE_WebApp/_shots/
+__pycache__/
+*.pyc
 *.tmp
