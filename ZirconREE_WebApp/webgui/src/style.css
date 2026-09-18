@@ -237,6 +237,15 @@ details.adv[open] > summary:before { content: "▾ "; }
 details.adv > summary:hover { color: var(--text); }
 details.adv .advbody { padding-top: 10px; }
 button.primary.big { padding: 8px 22px; font-size: 13.5px; }
+
+/* --------------------------------------------------- 验证页小标题/表格 */
+.vt { font-size: 13px; font-weight: 500; color: var(--text); margin: 18px 0 6px;
+      padding-left: 9px; border-left: 3px solid var(--accent); }
+table.data tr.g td { color: var(--ok); }
+#valBox table.data, #litBox table.data { margin: 8px 0; }
+#valBox table.data th, #litBox table.data th { white-space: normal; }
+#valBox table.data td, #litBox table.data td { vertical-align: top; }
+#cv_out { max-height: 260px; }
 .doc h3 { font-size: 14px; margin: 20px 0 6px; }
 .doc h3:first-child { margin-top: 0; }
 .doc p, .doc li { color: var(--text); font-size: 13px; }

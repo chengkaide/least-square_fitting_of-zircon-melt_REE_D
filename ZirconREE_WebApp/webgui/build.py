@@ -12,7 +12,8 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.abspath(os.path.join(HERE, ".."))
 TOKEN = "/*@{}@*/"
-PARTS = [("STYLE", "src/style.css"), ("DATA", "src/data.js"), ("MATH", "src/math.js"), ("APP", "src/app.js")]
+PARTS = [("STYLE", "src/style.css"), ("DATA", "src/data.js"), ("DEMOS", "src/demos.js"),
+         ("MATH", "src/math.js"), ("APP", "src/app.js")]
 OUT_NAME = "锆石熔体REE工具.html"
 
 

@@ -99,6 +99,27 @@
           <p class="hint">表头能自动识别（Element / ri / Di / 1s / T / P）；认错了可以展开左侧「高级设置」手动指定列。</p>
         </div>
       </div>
+
+      <div class="card">
+        <h2>顺手的小工具：浓度 → 分配系数 D</h2>
+        <div class="body">
+          <p class="hint">手里是锆石与熔体（或全岩）的<b>浓度</b>（ppm）时，先在这里算 <b>D = C<sub>锆石</sub> / C<sub>熔体</sub></b>，
+            再把结果粘进模块③。两栏按同样顺序粘贴，每行一个元素（可带元素名，也会一起带过去）。</p>
+          <div class="grid2">
+            <div><label class="f">① 锆石浓度 (ppm)</label>
+              <textarea id="cv_zr" style="min-height:126px" spellcheck="false" placeholder="La&#9;0.5&#10;Ce&#9;12&#10;..."></textarea></div>
+            <div><label class="f">② 熔体 / 全岩浓度 (ppm)</label>
+              <textarea id="cv_melt" style="min-height:126px" spellcheck="false" placeholder="La&#9;35&#10;Ce&#9;80&#10;..."></textarea></div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="primary" id="cv_run">算 D</button>
+            <button class="tiny" id="cv_copy">复制 (ri + D 两列)</button>
+            <span class="hint" id="cv_msg">—</span>
+          </div>
+          <pre class="report" id="cv_out">等待输入…</pre>
+          <p class="hint">第二列是 D；复制出来的格式可直接粘进模块③（表头会是 <code>Radii&nbsp;&nbsp;D</code>）。</p>
+        </div>
+      </div>
     </section>
 
     <!-- ================================================== ① 自由拟合 -->
@@ -114,12 +135,10 @@
             <h2>1 · 输入数据</h2>
             <div class="body">
               <div class="row between">
-                <div class="row">
-                  <button class="tiny" id="m1_demo1">示例：Burnham 2012</button>
-                  <button class="tiny" id="m1_demo2">示例：合成数据</button>
-                </div>
+                <select id="m1_demo" style="max-width:320px"></select>
                 <button class="tiny" id="m1_clear">清空</button>
               </div>
+              <p class="hint" id="m1_demoNote">—</p>
               <div class="drop" id="m1_drop">拖入 .xlsx / .csv / .txt，或点击选择<input type="file" id="m1_file" accept=".xlsx,.csv,.tsv,.txt" hidden></div>
               <textarea id="m1_data" spellcheck="false" placeholder="Element&#9;ri&#9;Di&#9;1s&#10;La&#9;1.160&#9;0.0015&#9;0.0014"></textarea>
               <div class="row" style="margin-top:8px">
@@ -217,9 +236,10 @@
             <h2>1 · 输入数据</h2>
             <div class="body">
               <div class="row between">
-                <button class="tiny" id="m2_demo1">示例：Burnham 2012</button>
+                <select id="m2_demo" style="max-width:320px"></select>
                 <button class="tiny" id="m2_clear">清空</button>
               </div>
+              <p class="hint" id="m2_demoNote">—</p>
               <div class="drop" id="m2_drop">拖入 .xlsx / .csv / .txt，或点击选择<input type="file" id="m2_file" accept=".xlsx,.csv,.tsv,.txt" hidden></div>
               <textarea id="m2_data" spellcheck="false" placeholder="Element&#9;ri&#9;Di&#9;1s"></textarea>
               <div class="row" style="margin-top:8px">
@@ -325,9 +345,10 @@
             <h2>1 · 输入数据</h2>
             <div class="body">
               <div class="row between">
-                <button class="tiny" id="m3_demo1">示例：Partition_coefficents_data</button>
+                <select id="m3_demo" style="max-width:320px"></select>
                 <button class="tiny" id="m3_clear">清空</button>
               </div>
+              <p class="hint" id="m3_demoNote">—</p>
               <div class="drop" id="m3_drop">拖入 .xlsx / .csv / .txt，或点击选择<input type="file" id="m3_file" accept=".xlsx,.csv,.tsv,.txt" hidden></div>
               <textarea id="m3_data" spellcheck="false" placeholder="Radii&#9;D(Sample 1)&#9;D(Sample 2)&#10;1.160&#9;0.0103&#9;0.1187"></textarea>
               <div class="row" style="margin-top:8px">
@@ -405,6 +426,12 @@
                 <div class="advbody scroll tall" id="m3_stats"></div>
               </details>
             </div>
+            <div class="body">
+              <details class="adv">
+                <summary>参数敏感性：换 Q / r₀ / D₀(T)，温度会变多少</summary>
+                <div class="advbody" id="m3_sens"></div>
+              </details>
+            </div>
           </div>
           <div class="card">
             <h2>4 · 图</h2>
@@ -471,6 +498,16 @@ La         1.160   0.0015  0.0014
           <li>只读取 xlsx 的第一个工作表；旧版 .xls 不支持，请另存为 .xlsx 或 .csv。</li>
         </ul>
 
+        <h3>验证：这套算法到底靠不靠谱</h3>
+        <p>三类检验，数字全部由 <code>webgui/validate.py</code> 自动生成，页面只是显示结果。</p>
+        <div id="valBox">（验证数据未载入）</div>
+
+        <h3>文献数据：哪些能拿来验、哪些拿不到</h3>
+        <div id="litBox">（未载入）</div>
+
+        <h3>关于锆石标样（91500 / Plešovice / GJ-1 / Temora / Mud Tank）</h3>
+        <div id="stdBox">（未载入）</div>
+
         <h3>出处</h3>
         <p>算法与示例数据来自 Streicher, L.B., van Westrenen, W., Hanchar, J.M., Brouwer, F.M. (2023) <i>GCA</i> 346, 54–64（doi:10.1016/j.gca.2023.01.030）配套代码，原作者 Linus Streicher（VU Amsterdam）。示例数据取自 Burnham &amp; Berry (2012) <i>GCA</i> 95, 196–212。</p>
       </div></div>
@@ -483,6 +520,7 @@ La         1.160   0.0015  0.0014
 </div>
 
 <script>/*@DATA@*/</script>
+<script>/*@DEMOS@*/</script>
 <script>/*@MATH@*/</script>
 <script>/*@APP@*/</script>
 </body>

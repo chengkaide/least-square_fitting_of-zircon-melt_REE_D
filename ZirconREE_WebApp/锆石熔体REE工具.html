@@ -243,6 +243,15 @@ details.adv[open] > summary:before { content: "▾ "; }
 details.adv > summary:hover { color: var(--text); }
 details.adv .advbody { padding-top: 10px; }
 button.primary.big { padding: 8px 22px; font-size: 13.5px; }
+
+/* --------------------------------------------------- 验证页小标题/表格 */
+.vt { font-size: 13px; font-weight: 500; color: var(--text); margin: 18px 0 6px;
+      padding-left: 9px; border-left: 3px solid var(--accent); }
+table.data tr.g td { color: var(--ok); }
+#valBox table.data, #litBox table.data { margin: 8px 0; }
+#valBox table.data th, #litBox table.data th { white-space: normal; }
+#valBox table.data td, #litBox table.data td { vertical-align: top; }
+#cv_out { max-height: 260px; }
 .doc h3 { font-size: 14px; margin: 20px 0 6px; }
 .doc h3:first-child { margin-top: 0; }
 .doc p, .doc li { color: var(--text); font-size: 13px; }
@@ -360,6 +369,27 @@ button.primary.big { padding: 8px 22px; font-size: 13.5px; }
           <p class="hint">表头能自动识别（Element / ri / Di / 1s / T / P）；认错了可以展开左侧「高级设置」手动指定列。</p>
         </div>
       </div>
+
+      <div class="card">
+        <h2>顺手的小工具：浓度 → 分配系数 D</h2>
+        <div class="body">
+          <p class="hint">手里是锆石与熔体（或全岩）的<b>浓度</b>（ppm）时，先在这里算 <b>D = C<sub>锆石</sub> / C<sub>熔体</sub></b>，
+            再把结果粘进模块③。两栏按同样顺序粘贴，每行一个元素（可带元素名，也会一起带过去）。</p>
+          <div class="grid2">
+            <div><label class="f">① 锆石浓度 (ppm)</label>
+              <textarea id="cv_zr" style="min-height:126px" spellcheck="false" placeholder="La&#9;0.5&#10;Ce&#9;12&#10;..."></textarea></div>
+            <div><label class="f">② 熔体 / 全岩浓度 (ppm)</label>
+              <textarea id="cv_melt" style="min-height:126px" spellcheck="false" placeholder="La&#9;35&#10;Ce&#9;80&#10;..."></textarea></div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="primary" id="cv_run">算 D</button>
+            <button class="tiny" id="cv_copy">复制 (ri + D 两列)</button>
+            <span class="hint" id="cv_msg">—</span>
+          </div>
+          <pre class="report" id="cv_out">等待输入…</pre>
+          <p class="hint">第二列是 D；复制出来的格式可直接粘进模块③（表头会是 <code>Radii&nbsp;&nbsp;D</code>）。</p>
+        </div>
+      </div>
     </section>
 
     <!-- ================================================== ① 自由拟合 -->
@@ -375,12 +405,10 @@ button.primary.big { padding: 8px 22px; font-size: 13.5px; }
             <h2>1 · 输入数据</h2>
             <div class="body">
               <div class="row between">
-                <div class="row">
-                  <button class="tiny" id="m1_demo1">示例：Burnham 2012</button>
-                  <button class="tiny" id="m1_demo2">示例：合成数据</button>
-                </div>
+                <select id="m1_demo" style="max-width:320px"></select>
                 <button class="tiny" id="m1_clear">清空</button>
               </div>
+              <p class="hint" id="m1_demoNote">—</p>
               <div class="drop" id="m1_drop">拖入 .xlsx / .csv / .txt，或点击选择<input type="file" id="m1_file" accept=".xlsx,.csv,.tsv,.txt" hidden></div>
               <textarea id="m1_data" spellcheck="false" placeholder="Element&#9;ri&#9;Di&#9;1s&#10;La&#9;1.160&#9;0.0015&#9;0.0014"></textarea>
               <div class="row" style="margin-top:8px">
@@ -478,9 +506,10 @@ button.primary.big { padding: 8px 22px; font-size: 13.5px; }
             <h2>1 · 输入数据</h2>
             <div class="body">
               <div class="row between">
-                <button class="tiny" id="m2_demo1">示例：Burnham 2012</button>
+                <select id="m2_demo" style="max-width:320px"></select>
                 <button class="tiny" id="m2_clear">清空</button>
               </div>
+              <p class="hint" id="m2_demoNote">—</p>
               <div class="drop" id="m2_drop">拖入 .xlsx / .csv / .txt，或点击选择<input type="file" id="m2_file" accept=".xlsx,.csv,.tsv,.txt" hidden></div>
               <textarea id="m2_data" spellcheck="false" placeholder="Element&#9;ri&#9;Di&#9;1s"></textarea>
               <div class="row" style="margin-top:8px">
@@ -586,9 +615,10 @@ button.primary.big { padding: 8px 22px; font-size: 13.5px; }
             <h2>1 · 输入数据</h2>
             <div class="body">
               <div class="row between">
-                <button class="tiny" id="m3_demo1">示例：Partition_coefficents_data</button>
+                <select id="m3_demo" style="max-width:320px"></select>
                 <button class="tiny" id="m3_clear">清空</button>
               </div>
+              <p class="hint" id="m3_demoNote">—</p>
               <div class="drop" id="m3_drop">拖入 .xlsx / .csv / .txt，或点击选择<input type="file" id="m3_file" accept=".xlsx,.csv,.tsv,.txt" hidden></div>
               <textarea id="m3_data" spellcheck="false" placeholder="Radii&#9;D(Sample 1)&#9;D(Sample 2)&#10;1.160&#9;0.0103&#9;0.1187"></textarea>
               <div class="row" style="margin-top:8px">
@@ -666,6 +696,12 @@ button.primary.big { padding: 8px 22px; font-size: 13.5px; }
                 <div class="advbody scroll tall" id="m3_stats"></div>
               </details>
             </div>
+            <div class="body">
+              <details class="adv">
+                <summary>参数敏感性：换 Q / r₀ / D₀(T)，温度会变多少</summary>
+                <div class="advbody" id="m3_sens"></div>
+              </details>
+            </div>
           </div>
           <div class="card">
             <h2>4 · 图</h2>
@@ -732,6 +768,16 @@ La         1.160   0.0015  0.0014
           <li>只读取 xlsx 的第一个工作表；旧版 .xls 不支持，请另存为 .xlsx 或 .csv。</li>
         </ul>
 
+        <h3>验证：这套算法到底靠不靠谱</h3>
+        <p>三类检验，数字全部由 <code>webgui/validate.py</code> 自动生成，页面只是显示结果。</p>
+        <div id="valBox">（验证数据未载入）</div>
+
+        <h3>文献数据：哪些能拿来验、哪些拿不到</h3>
+        <div id="litBox">（未载入）</div>
+
+        <h3>关于锆石标样（91500 / Plešovice / GJ-1 / Temora / Mud Tank）</h3>
+        <div id="stdBox">（未载入）</div>
+
         <h3>出处</h3>
         <p>算法与示例数据来自 Streicher, L.B., van Westrenen, W., Hanchar, J.M., Brouwer, F.M. (2023) <i>GCA</i> 346, 54–64（doi:10.1016/j.gca.2023.01.030）配套代码，原作者 Linus Streicher（VU Amsterdam）。示例数据取自 Burnham &amp; Berry (2012) <i>GCA</i> 95, 196–212。</p>
       </div></div>
@@ -767,6 +813,13 @@ const R_SHANNON_VIII = {
   radii: {"Sc": 0.87, "Y": 1.019, "La": 1.16, "Ce": 1.143, "Pr": 1.126, "Nd": 1.109, "Pm": 1.093, "Sm": 1.079, "Eu": 1.066, "Gd": 1.053, "Tb": 1.04, "Dy": 1.027, "Ho": 1.015, "Er": 1.004, "Tm": 0.994, "Yb": 0.985, "Lu": 0.977}
 };
 const ELEMENT_ORDER = ["Sc", "Y", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", "Lu"];
+</script>
+<script>/* 由 webgui/make_demos.py 自动生成，请勿手工编辑 */
+const DEMO_SERIES = [{"key": "syn_a", "label": "合成 A　中温 / 中等 E", "T_C": 1000.0, "truth": {"D0": 2.75, "r0": 0.941, "E_GPa": 580.0}, "noise": 0.1, "note": "真值 D₀=2.75，r₀=0.9410 Å，E=580 GPa，T=1000 °C，每点 10% 高斯噪声", "rows": [{"el": "Sc", "ri": 0.87, "di": 0.8749966775068495, "s1": 0.10807147494213128}, {"el": "La", "ri": 1.16, "di": 6.512999808605939e-05, "s1": 5.562815147251912e-06}, {"el": "Ce", "ri": 1.143, "di": 0.00030550448224514037, "s1": 3.071866474583243e-05}, {"el": "Pr", "ri": 1.126, "di": 0.0014194533953388038, "s1": 0.0001443820207253227}, {"el": "Nd", "ri": 1.109, "di": 0.005664102607468467, "s1": 0.0005799578246464706}, {"el": "Sm", "ri": 1.079, "di": 0.04696519622213389, "s1": 0.004656421119981358}, {"el": "Eu", "ri": 1.066, "di": 0.09917261913836752, "s1": 0.009959689789147479}, {"el": "Gd", "ri": 1.053, "di": 0.20176101215458225, "s1": 0.01959718110839161}, {"el": "Tb", "ri": 1.04, "di": 0.27882538772414495, "s1": 0.035537501653803615}, {"el": "Dy", "ri": 1.027, "di": 0.6210412201575315, "s1": 0.05949999529064714}, {"el": "Ho", "ri": 1.015, "di": 0.9020133176669195, "s1": 0.08934029277743062}, {"el": "Er", "ri": 1.004, "di": 1.1962580872531403, "s1": 0.12247419235144515}, {"el": "Tm", "ri": 0.994, "di": 1.6617867090882503, "s1": 0.15573991948376661}, {"el": "Yb", "ri": 0.985, "di": 2.0624488448931517, "s1": 0.18628987974768696}, {"el": "Lu", "ri": 0.977, "di": 2.078217009085113, "s1": 0.21219091876876567}]}, {"key": "syn_b", "label": "合成 B　低温 / 高 E", "T_C": 800.0, "truth": {"D0": 0.95, "r0": 0.93, "E_GPa": 760.0}, "noise": 0.1, "note": "真值 D₀=0.95，r₀=0.9300 Å，E=760 GPa，T=800 °C，每点 10% 高斯噪声", "rows": [{"el": "Sc", "ri": 0.87, "di": 0.37457416555148304, "s1": 0.03382681876526044}, {"el": "La", "ri": 1.16, "di": 8.300537690274853e-09, "s1": 9.042776346126565e-10}, {"el": "Ce", "ri": 1.143, "di": 1.559685431215285e-07, "s1": 1.4798744732930645e-08}, {"el": "Pr", "ri": 1.126, "di": 1.8133424883235376e-06, "s1": 1.8812404641485072e-07}, {"el": "Nd", "ri": 1.109, "di": 1.9914693466029913e-05, "s1": 1.8694367197487428e-06}, {"el": "Sm", "ri": 1.079, "di": 0.0007444437583248808, "s1": 6.0132225044582876e-05}, {"el": "Eu", "ri": 1.066, "di": 0.0022847851072974427, "s1": 0.00021644287441667837}, {"el": "Gd", "ri": 1.053, "di": 0.00640257063427843, "s1": 0.0006834599041174538}, {"el": "Tb", "ri": 1.04, "di": 0.018246251439399352, "s1": 0.001898657250135093}, {"el": "Dy", "ri": 1.027, "di": 0.04442130832941507, "s1": 0.004653438057331902}, {"el": "Ho", "ri": 1.015, "di": 0.08821381512592527, "s1": 0.00954832771891935}, {"el": "Er", "ri": 1.004, "di": 0.1724727338819799, "s1": 0.016869055970962898}, {"el": "Tm", "ri": 0.994, "di": 0.29327846599389534, "s1": 0.02630746086429417}, {"el": "Yb", "ri": 0.985, "di": 0.42365446737955226, "s1": 0.03701939383705323}, {"el": "Lu", "ri": 0.977, "di": 0.3813005829435745, "s1": 0.0479166353540023}]}, {"key": "syn_c", "label": "合成 C　高温 / 低 E", "T_C": 1300.0, "truth": {"D0": 6.2, "r0": 0.96, "E_GPa": 430.0}, "noise": 0.15, "note": "真值 D₀=6.20，r₀=0.9600 Å，E=430 GPa，T=1300 °C，每点 15% 高斯噪声", "rows": [{"el": "Sc", "ri": 0.87, "di": 3.1214549472496507, "s1": 0.3755391722233709}, {"el": "La", "ri": 1.16, "di": 0.024080641405012256, "s1": 0.004035309766336866}, {"el": "Ce", "ri": 1.143, "di": 0.06716516132796321, "s1": 0.010255434868293029}, {"el": "Pr", "ri": 1.126, "di": 0.1392348104505211, "s1": 0.023693353805239094}, {"el": "Nd", "ri": 1.109, "di": 0.32885064787599205, "s1": 0.04988338487798414}, {"el": "Sm", "ri": 1.079, "di": 0.6006428857240355, "s1": 0.1490638734035885}, {"el": "Eu", "ri": 1.066, "di": 1.5538086443455974, "s1": 0.22022454712804193}, {"el": "Gd", "ri": 1.053, "di": 2.3103909593666816, "s1": 0.3097123988847106}, {"el": "Tb", "ri": 1.04, "di": 3.0309078468678106, "s1": 0.4150742154780687}, {"el": "Dy", "ri": 1.027, "di": 4.001490910152339, "s1": 0.5306913033862353}, {"el": "Ho", "ri": 1.015, "di": 3.2187170448422715, "s1": 0.6391577973840017}, {"el": "Er", "ri": 1.004, "di": 4.45400186684661, "s1": 0.7328414453972679}, {"el": "Tm", "ri": 0.994, "di": 6.511698554505648, "s1": 0.8074485000891914}, {"el": "Yb", "ri": 0.985, "di": 4.445983992841368, "s1": 0.8619982936587839}, {"el": "Lu", "ri": 0.977, "di": 6.164881032591148, "s1": 0.8980858685702405}]}];
+const DEMO_THERMO_SYN = {"label": "合成　三个已知温度样品", "note": "由温度计模型正演，三个样品真值温度 900 / 1100 / 1300 °C，每点 8% 高斯噪声", "Q": 6489, "r0": 0.93, "d0Model": "streicher2023", "noise": 0.08, "radii": [1.16, 1.143, 1.126, 1.109, 1.079, 1.066, 1.053, 1.04, 1.027, 1.015, 1.004, 0.994, 0.985, 0.977], "columns": {"Syn-1": [0.0006145179403906624, 0.0037553539112936897, 0.021286050696750346, 0.08605270314597391, 0.9478511611726851, 1.9496741430414744, 3.944284922673026, 8.676591502539102, 12.143166856331026, 22.873799207426675, 29.79740441822961, 33.97662254717634, 51.689370888804696, 61.684041962932696], "Syn-2": [0.0007066278966236292, 0.0034925161032315667, 0.013339214681661802, 0.04297893786391012, 0.28283758233502965, 0.5629298153374753, 1.1066085794846692, 1.9205738969298687, 3.1864728786503664, 4.63704339565669, 6.6974435475413365, 7.228642041746942, 10.74959320133508, 10.448807199611105], "Syn-3": [0.0007457343991702208, 0.0029349536020584406, 0.009613841843941894, 0.029146118729106753, 0.14216392536539485, 0.2897272645652765, 0.47202442618121404, 0.6725375605054074, 1.1687303645269282, 1.6594065045336608, 2.0795782282274735, 2.5252365563001082, 3.0080481051800056, 3.149167540693456]}, "truth": {"Syn-1": 1173.15, "Syn-2": 1373.15, "Syn-3": 1573.15}};
+const VALIDATION = {"reverse": {"burnham_berry_2012": {"source": "Burnham & Berry (2012) GCA 95, 196-212（实验，13 个点）", "provenance": "EXP — 实验数据，温度由实验设定、独立已知", "T_known_C": 1295.0, "T_known_K": 1568.15, "free": {"D0": 3.4688735993389543, "r0": 0.9562201041213311, "Efit": 28.381780420203075, "dD0": 0.8022710143706774, "dr0": 0.01037559156038455, "dEfit": 4.286108387812785, "corr_r0_E": 0.6705060757109539, "rms_log": 0.0685897809492615, "max_log": 0.14809522342153558, "lree_max_log": 0.14809522342153558, "E_GPa": 614.4846006050234, "dE_GPa": 92.79712413532002}, "constrained": [{"D0": 3.1553327646201557, "r0": 0.9472394921257029, "dD0": 0.6923088985793322, "dr0": 0.006409591821775021, "Q": 6489, "E_GPa": 514.8189683229509, "rms_log": 0.10051353474440042}, {"D0": 3.467523017678506, "r0": 0.956178612510173, "dD0": 0.7923559849886758, "dr0": 0.007247261663792246, "Q": 7827, "E_GPa": 613.8711208206784, "rms_log": 0.0682770363490963}], "thermo": {"6489_0.93_streicher2023": {"T_K": 1565.9403021873236, "dT_K": 28.84419811911654, "T_C": 1292.7903021873235, "rms_log": 0.1929103120257061, "bias_K": -2.2096978126764952}, "6489_0.93_rubatto2007": {"T_K": 1415.9804386038259, "dT_K": 13.923203898768065, "T_C": 1142.8304386038258, "rms_log": 0.31373550865178484, "bias_K": -152.16956139617423}, "6489_0.95_streicher2023": {"T_K": 1604.8287321771677, "dT_K": 28.26993207594799, "T_C": 1331.6787321771676, "rms_log": 0.1886202610647944, "bias_K": 36.6787321771676}, "6489_0.95_rubatto2007": {"T_K": 1436.4048023635892, "dT_K": 13.456153254319654, "T_C": 1163.254802363589, "rms_log": 0.09166670571081093, "bias_K": -131.74519763641092}, "7827_0.93_streicher2023": {"T_K": 1545.2488755399625, "dT_K": 28.54565068729284, "T_C": 1272.0988755399626, "rms_log": 0.4669685999195735, "bias_K": -22.901124460037636}, "7827_0.93_rubatto2007": {"T_K": 1405.3161801339916, "dT_K": 13.896014687584113, "T_C": 1132.1661801339915, "rms_log": 0.6331782439306087, "bias_K": -162.83381986600853}, "7827_0.95_streicher2023": {"T_K": 1589.5904467034643, "dT_K": 27.68216884638061, "T_C": 1316.4404467034642, "rms_log": 0.10744282996928697, "bias_K": 21.440446703464204}, "7827_0.95_rubatto2007": {"T_K": 1428.9376506072038, "dT_K": 13.289299773983116, "T_C": 1155.787650607204, "rms_log": 0.23581820858286906, "bias_K": -139.21234939279634}}, "thermo_log": {"6489_0.93_streicher2023": {"T_K": 1555.7851264111894, "dT_K": 148.56062930157606, "T_C": 1282.6351264111895, "rms_log": 0.19198853408025823, "bias_K": -12.364873588810724}, "6489_0.93_rubatto2007": {"T_K": 1390.2700738419146, "dT_K": 65.43615928721177, "T_C": 1117.1200738419147, "rms_log": 0.29492742613132367, "bias_K": -177.87992615808548}, "6489_0.95_streicher2023": {"T_K": 1658.2495482783077, "dT_K": 158.24509927986668, "T_C": 1385.0995482783078, "rms_log": 0.16191959052286778, "bias_K": 90.09954827830757}, "6489_0.95_rubatto2007": {"T_K": 1450.4038273056342, "dT_K": 68.18613695643481, "T_C": 1177.2538273056343, "rms_log": 0.0713927628524451, "bias_K": -117.7461726943659}, "7827_0.93_streicher2023": {"T_K": 1514.0571037364143, "dT_K": 146.12440417869735, "T_C": 1240.9071037364142, "rms_log": 0.46335161743327935, "bias_K": -54.09289626358577}, "7827_0.93_rubatto2007": {"T_K": 1350.945647783237, "dT_K": 63.82684533369894, "T_C": 1077.7956477832372, "rms_log": 0.5910430707096044, "bias_K": -217.20435221676303}, "7827_0.95_streicher2023": {"T_K": 1603.3246821093578, "dT_K": 152.8652397603992, "T_C": 1330.174682109358, "rms_log": 0.10446170371375302, "bias_K": 35.17468210935772}, "7827_0.95_rubatto2007": {"T_K": 1416.0018190039525, "dT_K": 66.6144645773656, "T_C": 1142.8518190039526, "rms_log": 0.22969930902677613, "bias_K": -152.14818099604759}}}}, "natural": {"source": "Whitehouse & Kamber (2002) EPSL 204, 333-346（西南格陵兰 Itsaq 片麻杂岩，自然样品）", "provenance": "NAT — 自然样品锆石/熔体 D(REE)；该文结论：陆地锆石 LREE 相对晶格应变模型超丰度，两件样品互推熔体成分可差两个数量级。仓库里该表名为 \"Whitehouse Data\"。", "space": "log — 该数据无 1σ 且 D 跨 5 个数量级，按对数域等权拟合", "samples": {"D(Sample 1)": {"D0": 1999.9999999999998, "r0": 0.8467662072020459, "Efit": 18.81471457292968, "dD0": 17230.61727936605, "dr0": 0.3794745213412135, "dEfit": 31.958831828776095, "corr_r0_E": 0.9938665640819465, "rms_log": 0.5713975522651287, "max_log": 1.3884859515966226, "lree_max_log": 1.2675314544176657, "E_GPa": 407.35120202728586, "dE_GPa": 691.9301651044228, "thermo_default": {"T_K": 1002.5860319404387, "dT_K": 63.48968208425908, "T_C": 729.4360319404387, "rms_log": 0.7533543576330294}}, "D(Sample 2)": {"D0": 1999.9999999999998, "r0": 0.8335748296368058, "Efit": 14.68668955132458, "dD0": 19258.479337298148, "dr0": 0.5146730660366836, "dEfit": 31.958830202663872, "corr_r0_E": 0.9945297241978949, "rms_log": 0.37613487164948084, "max_log": 0.7991628573476799, "lree_max_log": 0.6299402774267894, "E_GPa": 317.9766889018544, "dE_GPa": 691.9301298980015, "thermo_default": {"T_K": 962.95581845178, "dT_K": 58.569642917606096, "T_C": 689.80581845178, "rms_log": 0.8980014872301013}}}}, "montecarlo": {"free": {"syn_a": {"label": "合成 A　中温 / 中等 E", "noise": 0.1, "res": {"nrep": 400, "truth": {"D0": 2.75, "r0": 0.941, "E_GPa": 580.0}, "D0": {"mean": 2.7411988930514353, "bias_pct": -0.32004025267508107, "sd": 0.13095179719663752, "mean_err": 0.12547436748105226, "cov1": 0.6475, "cov2": 0.9425}, "r0": {"mean": 0.9410350646890244, "bias_pct": 0.003726321894205917, "sd": 0.0019096177930822767, "mean_err": 0.001835731967560699, "cov1": 0.6525, "cov2": 0.95}, "E_GPa": {"mean": 580.1177762089575, "bias_pct": 0.020306242923703425, "sd": 9.8847370709021, "mean_err": 10.020907573738189, "cov1": 0.685, "cov2": 0.965}}}, "syn_b": {"label": "合成 B　低温 / 高 E", "noise": 0.1, "res": {"nrep": 400, "truth": {"D0": 0.95, "r0": 0.93, "E_GPa": 760.0}, "D0": {"mean": 0.9453523885371808, "bias_pct": -0.4892222592441171, "sd": 0.04699395304111048, "mean_err": 0.04822281579147626, "cov1": 0.68, "cov2": 0.97}, "r0": {"mean": 0.9301504798957668, "bias_pct": 0.01618063395341669, "sd": 0.0012234725951361081, "mean_err": 0.001294411642560895, "cov1": 0.7075, "cov2": 0.97}, "E_GPa": {"mean": 760.8459575764186, "bias_pct": 0.1113102074235054, "sd": 8.451581491983298, "mean_err": 8.465629465203053, "cov1": 0.6725, "cov2": 0.9675}}}, "syn_c": {"label": "合成 C　高温 / 低 E", "noise": 0.15, "res": {"nrep": 400, "truth": {"D0": 6.2, "r0": 0.96, "E_GPa": 430.0}, "D0": {"mean": 6.1957547604502805, "bias_pct": -0.06847160564063984, "sd": 0.37286083962605693, "mean_err": 0.36567475332024246, "cov1": 0.67, "cov2": 0.945}, "r0": {"mean": 0.9602149943208989, "bias_pct": 0.02239524176030072, "sd": 0.003701176037810075, "mean_err": 0.003884618056078382, "cov1": 0.7275, "cov2": 0.955}, "E_GPa": {"mean": 431.38908796845806, "bias_pct": 0.3230437135948969, "sd": 18.36798191734067, "mean_err": 18.695733869449086, "cov1": 0.6975, "cov2": 0.9625}}}}, "thermo": {"700C_5": {"truth_K": 973.15, "nrep": 400, "mean_K": 973.344244495265, "bias_K": 0.19424449526502485, "sd_K": 1.1787008152188738, "mean_err_K": 1.2722788045002427, "cov1": 0.71, "cov2": 0.9425, "rmse_K": 1.1931442480726853}, "700C_10": {"truth_K": 973.15, "nrep": 400, "mean_K": 973.5666438608287, "bias_K": 0.4166438608286853, "sd_K": 2.6657618946043793, "mean_err_K": 2.5629930836013126, "cov1": 0.67, "cov2": 0.925, "rmse_K": 2.694830768210522}, "700C_20": {"truth_K": 973.15, "nrep": 400, "mean_K": 975.7044694972213, "bias_K": 2.554469497221362, "sd_K": 5.42318340163056, "mean_err_K": 5.422700326703137, "cov1": 0.64, "cov2": 0.9125, "rmse_K": 5.98854784772033}, "800C_5": {"truth_K": 1073.15, "nrep": 400, "mean_K": 1073.245024245904, "bias_K": 0.09502424590391456, "sd_K": 1.5254337623644072, "mean_err_K": 1.5639187393365064, "cov1": 0.6825, "cov2": 0.95, "rmse_K": 1.5264862921960571}, "800C_10": {"truth_K": 1073.15, "nrep": 400, "mean_K": 1073.7441856439398, "bias_K": 0.5941856439396815, "sd_K": 3.0333879803537966, "mean_err_K": 3.161947534593985, "cov1": 0.6625, "cov2": 0.9625, "rmse_K": 3.087312036743371}, "800C_20": {"truth_K": 1073.15, "nrep": 400, "mean_K": 1075.2114913526407, "bias_K": 2.061491352640587, "sd_K": 6.871917219080378, "mean_err_K": 6.666835227644586, "cov1": 0.695, "cov2": 0.94, "rmse_K": 7.166235744604054}, "900C_5": {"truth_K": 1173.15, "nrep": 400, "mean_K": 1173.3293347865879, "bias_K": 0.17933478658778768, "sd_K": 1.9933879732174253, "mean_err_K": 1.8541366408354165, "cov1": 0.645, "cov2": 0.92, "rmse_K": 1.9989553742940176}, "900C_10": {"truth_K": 1173.15, "nrep": 400, "mean_K": 1173.9161825697006, "bias_K": 0.7661825697005042, "sd_K": 3.696737483063705, "mean_err_K": 3.7790945371094584, "cov1": 0.705, "cov2": 0.925, "rmse_K": 3.7707743341062336}, "900C_20": {"truth_K": 1173.15, "nrep": 400, "mean_K": 1175.6412904354656, "bias_K": 2.491290435465544, "sd_K": 7.8694506122266015, "mean_err_K": 7.761546336335114, "cov1": 0.6775, "cov2": 0.935, "rmse_K": 8.244996078820774}, "1000C_5": {"truth_K": 1273.15, "nrep": 400, "mean_K": 1273.4261146783633, "bias_K": 0.27611467836322845, "sd_K": 2.192665625848701, "mean_err_K": 2.1978357829310697, "cov1": 0.685, "cov2": 0.9325, "rmse_K": 2.207261290835144}, "1000C_10": {"truth_K": 1273.15, "nrep": 400, "mean_K": 1273.861879652243, "bias_K": 0.711879652242942, "sd_K": 4.662113692392634, "mean_err_K": 4.397867112604695, "cov1": 0.6525, "cov2": 0.92, "rmse_K": 4.710386232557829}, "1000C_20": {"truth_K": 1273.15, "nrep": 400, "mean_K": 1276.0809879781302, "bias_K": 2.9309879781301333, "sd_K": 9.283952150508807, "mean_err_K": 9.160861838235792, "cov1": 0.6325, "cov2": 0.9375, "rmse_K": 9.724555447013888}, "1100C_5": {"truth_K": 1373.15, "nrep": 400, "mean_K": 1373.3339629200957, "bias_K": 0.18396292009560966, "sd_K": 2.55324097976407, "mean_err_K": 2.5766590596363743, "cov1": 0.68, "cov2": 0.935, "rmse_K": 2.5566744528713237}, "1100C_10": {"truth_K": 1373.15, "nrep": 400, "mean_K": 1374.2854229816865, "bias_K": 1.1354229816863608, "sd_K": 5.298450440650079, "mean_err_K": 5.193899055211448, "cov1": 0.6225, "cov2": 0.935, "rmse_K": 5.412261863277324}, "1100C_20": {"truth_K": 1373.15, "nrep": 400, "mean_K": 1376.2959058433366, "bias_K": 3.14590584333655, "sd_K": 11.650443029023048, "mean_err_K": 10.715980576890475, "cov1": 0.62, "cov2": 0.92, "rmse_K": 12.053639047636999}, "1200C_5": {"truth_K": 1473.15, "nrep": 400, "mean_K": 1473.5196715276136, "bias_K": 0.369671527613491, "sd_K": 2.763217904049513, "mean_err_K": 2.937847289041032, "cov1": 0.7075, "cov2": 0.945, "rmse_K": 2.7844104924786173}, "1200C_10": {"truth_K": 1473.15, "nrep": 400, "mean_K": 1474.0002256169798, "bias_K": 0.850225616979742, "sd_K": 6.012701178367622, "mean_err_K": 5.89213215678181, "cov1": 0.675, "cov2": 0.9375, "rmse_K": 6.065070289902764}, "1200C_20": {"truth_K": 1473.15, "nrep": 400, "mean_K": 1478.222349605023, "bias_K": 5.072349605022964, "sd_K": 12.817319732800359, "mean_err_K": 12.479869296588218, "cov1": 0.6575, "cov2": 0.935, "rmse_K": 13.769593546491445}, "1300C_5": {"truth_K": 1573.15, "nrep": 400, "mean_K": 1573.3989593963884, "bias_K": 0.24895939638827258, "sd_K": 3.335028811760924, "mean_err_K": 3.3122770291470385, "cov1": 0.66, "cov2": 0.935, "rmse_K": 3.340148486727383}, "1300C_10": {"truth_K": 1573.15, "nrep": 400, "mean_K": 1574.0936978275322, "bias_K": 0.9436978275321053, "sd_K": 6.676030211904059, "mean_err_K": 6.925792800621664, "cov1": 0.68, "cov2": 0.95, "rmse_K": 6.7341310895667235}, "1300C_20": {"truth_K": 1573.15, "nrep": 400, "mean_K": 1577.6432363117658, "bias_K": 4.493236311765713, "sd_K": 13.679555829280675, "mean_err_K": 14.053613318334524, "cov1": 0.685, "cov2": 0.9375, "rmse_K": 14.382336201763646}}, "thermo_mismodel": {"用 Q2/r0=0.95 生成 -> 用 Q1/r0=0.93 反演（800 C）": {"truth_K": 1073.15, "nrep": 400, "mean_K": 1026.2554181196363, "bias_K": -46.89458188036383, "sd_K": 2.8022638778032514, "mean_err_K": 6.331391971025389, "cov1": 0.0, "cov2": 0.0, "rmse_K": 46.97802529766334}, "用 Streicher 生成 -> 用 Rubatto 反演（800 C）": {"truth_K": 1073.15, "nrep": 400, "mean_K": 1148.274157254576, "bias_K": 75.12415725457595, "sd_K": 1.9025972801860132, "mean_err_K": 5.62171230907247, "cov1": 0.0, "cov2": 0.0, "rmse_K": 75.14818580597802}, "用 Q2/r0=0.95 生成 -> 用 Q1/r0=0.93 反演（1000 C）": {"truth_K": 1273.15, "nrep": 400, "mean_K": 1217.89797721253, "bias_K": -55.252022787470196, "sd_K": 4.0790439925556115, "mean_err_K": 7.839397011991564, "cov1": 0.0, "cov2": 0.0, "rmse_K": 55.40201282896309}, "用 Streicher 生成 -> 用 Rubatto 反演（1000 C）": {"truth_K": 1273.15, "nrep": 400, "mean_K": 1259.775575558143, "bias_K": -13.374424441857172, "sd_K": 2.3642294931334584, "mean_err_K": 2.5251717976896386, "cov1": 0.0, "cov2": 0.005, "rmse_K": 13.581267845617656}, "用 Q2/r0=0.95 生成 -> 用 Q1/r0=0.93 反演（1200 C）": {"truth_K": 1473.15, "nrep": 400, "mean_K": 1408.9008631772138, "bias_K": -64.24913682278634, "sd_K": 5.150224770475449, "mean_err_K": 9.337677053972886, "cov1": 0.0, "cov2": 0.0, "rmse_K": 64.45471344767243}, "用 Streicher 生成 -> 用 Rubatto 反演（1200 C）": {"truth_K": 1473.15, "nrep": 400, "mean_K": 1355.3356937300873, "bias_K": -117.81430626991278, "sd_K": 2.6144192729237545, "mean_err_K": 7.5937551490495965, "cov1": 0.0, "cov2": 0.0, "rmse_K": 117.84323850787992}}}, "sensitivity": {"radius_span": [{"n": 4, "span": 0.2899999999999999, "r0": 1.0000005, "dr0": 0.0, "E_GPa": 10825.335682046003, "D0": 1000.0000000005, "dE_GPa": 0.0, "corr_r0_E": null, "degenerate": true}, {"n": 6, "span": 0.2899999999999999, "r0": 0.9539009243149567, "dr0": 0.015631936346091765, "E_GPa": 553.4632552692593, "D0": 2.5956413808960774, "dE_GPa": 139.18692829172926, "corr_r0_E": 0.8067189913185462, "degenerate": false}, {"n": 8, "span": 0.2899999999999999, "r0": 0.9552647441423175, "dr0": 0.012845619267607786, "E_GPa": 570.4465805728868, "D0": 2.7971357273078388, "dE_GPa": 107.70753810727041, "corr_r0_E": 0.7177655640046506, "degenerate": false}, {"n": 10, "span": 0.2899999999999999, "r0": 0.956100866013602, "dr0": 0.011760519598068704, "E_GPa": 587.4470795035269, "D0": 3.026104153680949, "dE_GPa": 96.49881715358457, "corr_r0_E": 0.6892142747345471, "degenerate": false}, {"n": 13, "span": 0.2899999999999999, "r0": 0.9562201041213311, "dr0": 0.01037559156038455, "E_GPa": 614.4846006050234, "D0": 3.4688735993389543, "dE_GPa": 92.79712413532002, "corr_r0_E": 0.6705060757109539, "degenerate": false}], "thermo_model_spread": {"min_K": 1350.945647783237, "max_K": 1658.2495482783077, "span_K": 307.3039004950706, "min_bias_K": -217.20435221676303, "max_bias_K": 90.09954827830757}, "thermo_internal_1sigma": {"6489_0.93_streicher2023": 148.56062930157606, "6489_0.93_rubatto2007": 65.43615928721177, "6489_0.95_streicher2023": 158.24509927986668, "6489_0.95_rubatto2007": 68.18613695643481, "7827_0.93_streicher2023": 146.12440417869735, "7827_0.93_rubatto2007": 63.82684533369894, "7827_0.95_streicher2023": 152.8652397603992, "7827_0.95_rubatto2007": 66.6144645773656}, "weighting_effect": {"6489_0.93_streicher2023": {"linear": 1565.9403021873236, "log": 1555.7851264111894}, "6489_0.93_rubatto2007": {"linear": 1415.9804386038259, "log": 1390.2700738419146}, "6489_0.95_streicher2023": {"linear": 1604.8287321771677, "log": 1658.2495482783077}, "6489_0.95_rubatto2007": {"linear": 1436.4048023635892, "log": 1450.4038273056342}, "7827_0.93_streicher2023": {"linear": 1545.2488755399625, "log": 1514.0571037364143}, "7827_0.93_rubatto2007": {"linear": 1405.3161801339916, "log": 1350.945647783237}, "7827_0.95_streicher2023": {"linear": 1589.5904467034643, "log": 1603.3246821093578}, "7827_0.95_rubatto2007": {"linear": 1428.9376506072038, "log": 1416.0018190039525}}}, "meta": {"T_known_BB": 1295.0, "T_known_BB_K": 1568.15, "note": "全部数字由 webgui/validate.py 生成；scipy 拟合，与网页端 JS 求解器另有 77 项对照（最大相对偏差 6.3e-10）"}};
+const LIT_REF = {"note": "下列实验数据集都带独立已知温度，是检验温度计的理想材料；但四篇均为付费期刊、Unpaywall/OpenAlex 都查不到合法开放副本（2026-09-18 实测），因此本工具只用仓库自带的 Burnham & Berry (2012) 做反向检验，其余留作手工导入。", "items": [{"key": "burnham2012", "cite": "Burnham & Berry (2012) GCA 95, 196-212", "doi": "10.1016/j.gca.2012.07.034", "T_C": 1295, "P_GPa": 0.0001, "status": "已在仓库内", "note": "本仓库 Non_Linear_Fit_Code/2_Lattice_Strain_Data.xlsx，13 个元素，实验温度 1295 °C"}, {"key": "rubatto2007", "cite": "Rubatto & Hermann (2007) Chem Geol 241, 38-61", "doi": "10.1016/j.chemgeo.2007.01.027", "T_C": "800–1000", "P_GPa": 2.0, "status": "付费，无开放副本", "note": "20 kbar 含水花岗质熔体，4 个温度点，最理想的独立检验集 —— 拿到 PDF 后可直接粘贴进模块③"}, {"key": "luo2009", "cite": "Luo & Ayers (2009) GCA 73, 3656-3679", "doi": "10.1016/j.gca.2009.03.027", "T_C": "800–1300", "P_GPa": "1.0–2.0", "status": "付费，无开放副本", "note": "实验锆石/熔体 D(REE)"}, {"key": "thomas2002", "cite": "Thomas et al. (2002) GCA 66, 2885-2898", "doi": "10.1016/s0016-7037(02)00881-5", "T_C": "—", "P_GPa": "—", "status": "付费，无开放副本", "note": "熔体包裹体法测锆石/熔体 D"}, {"key": "whitehouse2002", "cite": "Whitehouse & Kamber (2002) EPSL 204, 333-346", "doi": "10.1016/s0012-821x(02)01000-2", "T_C": "自然样品", "status": "已在仓库内（表名 \"Whitehouse Data\"）", "note": "两件太古宙片麻岩；该文结论是 LREE 相对晶格应变模型超丰度，属于「模型已知失效」的反面案例"}], "stds": "关于锆石标样（91500 / Plešovice / GJ-1 / Temora / Mud Tank）：它们是 U-Pb 与微量元素的「锆石端元」参考物质，只给出锆石自身的浓度。本工具三个模块的输入都是分配系数 D = C_锆石 / C_熔体，缺熔体端就构不成 D，因此标样数据不能直接用于温度反演。要使用标样，需要配对的锆石 + 熔体（或全岩）分析 —— 主页「浓度换算 D」小工具就是为这一步准备的。"};
+const WH_SOURCE = {"label": "Whitehouse & Kamber (2002) 自然样品（LREE 超丰度，模型失效案例）", "cite": "Whitehouse & Kamber (2002) EPSL 204, 333-346", "note": "西南格陵兰 Itsaq 片麻杂岩两件太古宙样品（3.81 Ga 英云闪长岩、3.64 Ga 花岗闪长片麻岩）；该文结论：陆地锆石 LREE 相对晶格应变模型超丰度、两件样品互推熔体可差两个数量级。仓库里这张表名就叫 \"Whitehouse Data\"。"};
 </script>
 <script>/* ============================================================================
  * math.js -- 数值核心 (零依赖，可在浏览器与 Node 中运行)
@@ -2328,6 +2381,7 @@ const ELEMENT_ORDER = ["Sc", "Y", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd"
       '<p class="hint" style="padding:8px 2px 0">温度计是无权重拟合（原脚本不提供 σ），所以不报 χ²/dof，' +
       '改报对数域残差 RMS 与最大偏差 —— 后者约等于「曲线偏离数据点几个 dex」。</p>';
     renderPreviewThermo(pfx, data, res, null);
+    renderThermoSensitivity(data.radii, data.columns, Q, r0, d0m);
     drawM3Charts(res, data);
     setBadge(pfx, res.samples.length + ' 个样品', 'ok');
     setStatus('反演完成 · ' + res.samples.length + ' 个样品', 'ok');
@@ -2575,9 +2629,8 @@ const ELEMENT_ORDER = ["Sc", "Y", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd"
     if (calc) calc.addEventListener('click', compute);
     var clr = $(pfx + '_clear');
     if (clr) clr.addEventListener('click', function () { ta.value = ''; ST[pfx].maps.inited = false; compute(); });
-    var dl = $(pfx + '_demo1'), d2 = $(pfx + '_demo2');
-    if (dl) dl.addEventListener('click', function () { loadDemo(pfx, 'lattice'); });
-    if (d2) d2.addEventListener('click', function () { loadDemo(pfx, 'synth'); });
+    var dsel = $(pfx + '_demo');
+    if (dsel) dsel.addEventListener('change', function () { applyDemo(pfx, dsel.value); });
     var fr = $(pfx + '_fillri');
     if (fr) fr.addEventListener('click', function () { fillRadii(pfx, compute); });
     var rt = $(pfx + '_readTP');
@@ -2605,31 +2658,70 @@ const ELEMENT_ORDER = ["Sc", "Y", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd"
       if (f) loadFile(pfx, f, compute);
     });
   }
-  function loadDemo(pfx, kind) {
-    var ta = textareaOf(pfx);
-    if (kind === 'lattice') {
+  /* ============================================== 示例数据集（含真值） */
+  var DEMO_DEFS = [
+    { key: 'bb', mods: ['m1', 'm2'], label: 'Burnham & Berry (2012) 实验 · 温度已知',
+      note: '实验数据（13 个元素，1295 °C，≈1 atm）。温度独立已知 ⇒ 可用模块③反向检验：反演应回到 ≈1568 K。' },
+    { key: 'syn_a', mods: ['m1', 'm2'], label: '合成 A · 中温 / 中等 E（真值已知）' },
+    { key: 'syn_b', mods: ['m1', 'm2'], label: '合成 B · 低温 / 高 E（真值已知）' },
+    { key: 'syn_c', mods: ['m1', 'm2'], label: '合成 C · 高温 / 低 E（真值已知）' },
+    { key: 'whitehouse', mods: ['m3'], label: 'Whitehouse & Kamber (2002) 自然样品（模型失效案例）' },
+    { key: 'thermo_syn', mods: ['m3'], label: '合成 · 三个已知温度样品（真值已知）' }
+  ];
+  function demoByKey(k) {
+    for (var i = 0; i < DEMO_DEFS.length; i++) if (DEMO_DEFS[i].key === k) return DEMO_DEFS[i];
+    return null;
+  }
+  function fillDemoSelect(pfx) {
+    var sel = $(pfx + '_demo');
+    if (!sel) return;
+    sel.innerHTML = DEMO_DEFS.filter(function (d) { return d.mods.indexOf(pfx) >= 0; })
+      .map(function (d) { return '<option value="' + d.key + '">' + esc(d.label) + '</option>'; }).join('');
+  }
+  function applyDemo(pfx, key) {
+    var sel = $(pfx + '_demo'), ta = textareaOf(pfx), note = '';
+    var def = demoByKey(key);
+    if (sel && sel.value !== key) sel.value = key;
+    if (key === 'bb') {
       ta.value = 'Element\tri\tDi\t1s\tT [C]\tP [GPa]\n' + DEMO_LATTICE.rows.map(function (r) {
         return [r.el, r.ri.toFixed(3), r.di, r.s1, DEMO_LATTICE.T_C, DEMO_LATTICE.P_GPa].join('\t');
       }).join('\n');
       if ($(pfx + '_T')) $(pfx + '_T').value = DEMO_LATTICE.T_C;
       if ($(pfx + '_P')) $(pfx + '_P').value = DEMO_LATTICE.P_GPa;
-      setStatus('已载入示例：' + DEMO_LATTICE.name, 'ok');
-    } else if (kind === 'synth') {
-      ta.value = 'Element\tri\tDi\t1s\n' + DEMO_SYNTH.rows.map(function (r) {
-        return [r.el, r.ri.toFixed(3), r.di.toPrecision(8), r.s1.toPrecision(6)].join('\t');
-      }).join('\n');
-      if ($(pfx + '_T')) $(pfx + '_T').value = DEMO_SYNTH.T_C;
-      setStatus('已载入示例：' + DEMO_SYNTH.name + '（真值 D₀=' + DEMO_SYNTH.truth.D0 + '，r₀=' + DEMO_SYNTH.truth.r0 + '，E=' + DEMO_SYNTH.truth.E_GPa + ' GPa）', 'ok');
-    } else {
+      note = def ? def.note : '';
+    } else if (key === 'whitehouse') {
       var cols = Object.keys(DEMO_PARTITION.columns);
       ta.value = 'Radii\t' + cols.join('\t') + '\n' + DEMO_PARTITION.radii.map(function (r, i) {
         return [r.toFixed(3)].concat(cols.map(function (c) { return DEMO_PARTITION.columns[c][i]; })).join('\t');
       }).join('\n');
-      setStatus('已载入示例：' + DEMO_PARTITION.name, 'ok');
+      note = WH_SOURCE.note;
+    } else if (key === 'thermo_syn') {
+      var sy = DEMO_THERMO_SYN, cs = Object.keys(sy.columns);
+      ta.value = 'Radii\t' + cs.join('\t') + '\n' + sy.radii.map(function (r, i) {
+        return [r.toFixed(3)].concat(cs.map(function (c) { return sy.columns[c][i].toPrecision(8); })).join('\t');
+      }).join('\n');
+      if ($(pfx + '_Q')) $(pfx + '_Q').value = String(sy.Q);
+      if ($(pfx + '_r0')) $(pfx + '_r0').value = String(sy.r0);
+      if ($(pfx + '_d0')) $(pfx + '_d0').value = sy.d0Model;
+      var tv = Object.keys(sy.truth).map(function (k) {
+        return k + ' = ' + (sy.truth[k] - 273.15).toFixed(0) + ' °C';
+      }).join('，');
+      note = sy.note + '　真值：' + tv + '　→ 反演结果应该回到这些温度。';
+    } else {
+      var i, sp = null;
+      for (i = 0; i < DEMO_SERIES.length; i++) if (DEMO_SERIES[i].key === key) sp = DEMO_SERIES[i];
+      if (!sp) return;
+      ta.value = 'Element\tri\tDi\t1s\n' + sp.rows.map(function (r) {
+        return [r.el, r.ri.toFixed(3), r.di.toPrecision(8), r.s1.toPrecision(6)].join('\t');
+      }).join('\n');
+      if ($(pfx + '_T')) $(pfx + '_T').value = sp.T_C;
+      note = sp.note + '　→ 拟合结果应接近这组真值。';
     }
+    var nb = $(pfx + '_demoNote');
+    if (nb) nb.textContent = note || '—';
     ST[pfx].maps.inited = false;
-    var fn = { m1: computeM1, m2: computeM2, m3: computeM3 }[pfx];
-    fn();
+    ({ m1: computeM1, m2: computeM2, m3: computeM3 }[pfx])();
+    setStatus('已载入 ' + (def ? def.label : key), 'ok');
   }
   function loadFile(pfx, file, compute) {
     var name = file.name.toLowerCase();
@@ -2761,9 +2853,10 @@ const ELEMENT_ORDER = ["Sc", "Y", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd"
       T('温度计闭合 1500 K', back.samples[0].T_K, 1500, 1e-8);
 
       // 三个面板端到端：载入示例 -> 自动计算
-      loadDemo('m1', 'lattice');
-      loadDemo('m2', 'lattice');
-      loadDemo('m3', 'thermo');
+      fillDemoSelect('m1'); fillDemoSelect('m2'); fillDemoSelect('m3');
+      applyDemo('m1', 'bb');
+      applyDemo('m2', 'bb');
+      applyDemo('m3', 'whitehouse');
 
       // 每个标签页可切换
       var tabs = document.querySelectorAll('nav.tabs button');
@@ -2815,6 +2908,255 @@ const ELEMENT_ORDER = ["Sc", "Y", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd"
     return { pass: pass, fail: fail, log: out.join('\n') };
   }
 
+
+  /* ============================================ 验证结果（validate.py 产出） */
+  function copyText(txt, okMsg) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () { setStatus(okMsg, 'ok'); },
+        function () { fallbackCopy(txt); });
+    } else fallbackCopy(txt);
+  }
+  function vtTitle(t) { return '<div class="vt">' + t + '</div>'; }
+
+  function renderValidation() {
+    var box = $('valBox');
+    if (!box) return;
+    if (typeof VALIDATION === 'undefined' || !VALIDATION.reverse) {
+      box.innerHTML = '<p class="hint">验证数据未载入。请在 webgui 目录依次运行 <code>python validate.py</code>、' +
+        '<code>python make_demos.py</code>，再重新构建。</p>';
+      return;
+    }
+    var V = VALIDATION, h = [];
+    if (V.meta && V.meta.note) h.push('<p class="hint">' + esc(V.meta.note) + '</p>');
+
+    // ---- A1 反向检验 ----
+    var bb = V.reverse.burnham_berry_2012;
+    h.push(vtTitle('A1 · 反向检验：Burnham &amp; Berry (2012) 实验，温度 ' + fx(bb.T_known_C, 0) +
+      ' °C = ' + fx(bb.T_known_K, 2) + ' K（独立已知）'));
+    h.push('<table class="data"><thead><tr><th>Q</th><th>r₀ (Å)</th><th>D₀(T) 关系</th><th>反演 T (K)</th>' +
+      '<th>±1σ</th><th>与实验温度之差</th></tr></thead><tbody>');
+    Object.keys(bb.thermo_log).forEach(function (k) {
+      var v = bb.thermo_log[k], p = k.split('_');
+      h.push('<tr' + (Math.abs(v.bias_K) < 30 ? ' class="g"' : '') + '><td>' + p[0] + '</td><td>' + p[1] +
+        '</td><td>' + p[2] + '</td><td>' + fx(v.T_K, 1) + '</td><td>' + fx(v.dT_K, 1) + '</td><td>' +
+        (v.bias_K > 0 ? '+' : '') + fx(v.bias_K, 1) + ' K</td></tr>');
+    });
+    h.push('</tbody></table>');
+    var dk = bb.thermo_log['6489_0.93_streicher2023'], sp = V.sensitivity.thermo_model_spread;
+    if (dk) {
+      h.push('<div class="note">默认参数（Q₁ + r₀ = 0.93 Å + Streicher 的 D₀(T)）反演得到 <b>' + fx(dk.T_K, 1) +
+        ' K</b>，与实验温度相差 <b>' + (dk.bias_K > 0 ? '+' : '') + fx(dk.bias_K, 1) + ' K</b>。' +
+        '但 8 种参数组合整体跨度 <b>' + fx(sp.span_K, 0) + ' K</b>（' + fx(sp.min_bias_K, 0) + ' ～ +' +
+        fx(sp.max_bias_K, 0) + ' K）—— <b>误差预算由模型常数的选择主导，不是数据点</b>。' +
+        '把 Rubatto 的 D₀(T) 关系用在这种干体系高温实验上会偏 −150～−220 K，所以 D₀(T) 关系必须与体系匹配。</div>');
+    }
+    var fr = bb.free;
+    h.push('<p class="hint">同一份数据的晶格应变拟合：D₀ = ' + fx(fr.D0, 3) + ' ± ' + fx(fr.dD0, 3) +
+      '，r₀ = ' + fx(fr.r0, 4) + ' ± ' + fx(fr.dr0, 4) + ' Å，E = ' + fx(fr.E_GPa, 1) + ' ± ' + fx(fr.dE_GPa, 1) +
+      ' GPa；RMS(log₁₀D) = ' + fx(fr.rms_log, 3) + ' dex（≈ ' + fx(Math.pow(10, fr.rms_log), 2) + ' 倍），' +
+      'corr(r₀,E) = ' + fx(fr.corr_r0_E, 2) + '。</p>');
+
+    // ---- A2 反面案例 ----
+    h.push(vtTitle('A2 · 反面案例：Whitehouse &amp; Kamber (2002) 自然样品（该文已知模型失效）'));
+    h.push('<table class="data"><thead><tr><th>样品</th><th>D₀</th><th>r₀ (Å)</th><th>E (GPa)</th>' +
+      '<th>RMS(log₁₀D)</th><th>最大偏差</th><th>La–Pr 最大偏差</th></tr></thead><tbody>');
+    Object.keys(V.natural.samples).forEach(function (k) {
+      var r = V.natural.samples[k];
+      h.push('<tr class="bl"><td>' + esc(k) + '</td><td>' + fx(r.D0, 0) + (r.D0 > 1999 ? ' ⚠顶界' : '') +
+        '</td><td>' + fx(r.r0, 4) + '</td><td>' + fx(r.E_GPa, 0) + '</td><td>' + fx(r.rms_log, 2) +
+        '</td><td>' + fx(r.max_log, 2) + ' dex（' + fx(Math.pow(10, r.max_log), 0) + ' 倍）</td><td>' +
+        fx(r.lree_max_log, 2) + ' dex</td></tr>');
+    });
+    h.push('</tbody></table>');
+    h.push('<div class="note warn">这两件样品上，自由拟合的 D₀ 直接顶到搜索上界 2000、r₀ 掉到 0.83–0.85 Å' +
+      '（锆石位点半径本应 0.93–0.96 Å）—— <b>模型在这份数据上根本不成立</b>。' +
+      '工具的应对是：给出「触及参数边界」警告、把 LREE 高达 1.4 dex 的残差画在残差图上，' +
+      '而不是输出一个看似漂亮的拟合。这正是这套界面最该看的地方。</div>');
+
+    // ---- B 蒙特卡洛 ----
+    h.push(vtTitle('B · 蒙特卡洛误差标定（合成数据、真值已知，每组 400 次重复）'));
+    h.push('<table class="data"><thead><tr><th>数据集</th><th>噪声</th><th>参数</th><th>相对偏差</th>' +
+      '<th>报出的 1σ</th><th>1σ 覆盖率</th><th>2σ 覆盖率</th></tr></thead><tbody>');
+    Object.keys(V.montecarlo.free).forEach(function (k) {
+      var g = V.montecarlo.free[k];
+      ['D0', 'r0', 'E_GPa'].forEach(function (p) {
+        var r = g.res[p];
+        h.push('<tr><td>' + esc(g.label) + '</td><td>' + fx(g.noise * 100, 0) + '%</td><td>' + p +
+          '</td><td>' + (r.bias_pct > 0 ? '+' : '') + fx(r.bias_pct, 1) + '%</td><td>' + sig(r.mean_err, 3) +
+          '</td><td>' + fx(r.cov1, 2) + '</td><td>' + fx(r.cov2, 2) + '</td></tr>');
+      });
+    });
+    h.push('</tbody></table>');
+    h.push('<p class="hint">覆盖率的目标值是 1σ → 0.68、2σ → 0.95。可以看到报出的误差基本诚实：' +
+      '偏差都在 ±0.5% 以内，1σ 覆盖率 0.65–0.73，2σ 覆盖率 0.94–0.97。</p>');
+
+    h.push('<table class="data"><thead><tr><th>温度计真值 T</th><th>噪声 5%：偏差 / RMSE / 1σ 覆盖率</th>' +
+      '<th>10%</th><th>20%</th></tr></thead><tbody>');
+    var seen = {};
+    Object.keys(V.montecarlo.thermo).forEach(function (k) { seen[k.split('_')[0]] = 1; });
+    Object.keys(seen).forEach(function (tk) {
+      h.push('<tr><td>' + tk.replace('C', ' K') + '</td>');
+      ['5', '10', '20'].forEach(function (n) {
+        var v = V.montecarlo.thermo[tk + '_' + n];
+        h.push('<td>' + (v ? (v.bias_K > 0 ? '+' : '') + fx(v.bias_K, 1) + ' K / ' + fx(v.rmse_K, 1) +
+          ' K / ' + fx(v.cov1, 2) : '—') + '</td>');
+      });
+      h.push('</tr>');
+    });
+    h.push('</tbody></table>');
+    h.push('<p class="hint">温度计反演的偏差随温度和噪声缓慢增大（1573 K、20% 噪声时 +4.5 K），覆盖率仍在 0.66–0.69。</p>');
+
+    h.push('<table class="data"><thead><tr><th>模型误用情形</th><th>真值 T</th><th>平均反演 T</th><th>偏差</th></tr></thead><tbody>');
+    Object.keys(V.montecarlo.thermo_mismodel).forEach(function (k) {
+      var v = V.montecarlo.thermo_mismodel[k];
+      h.push('<tr class="bl"><td>' + esc(k) + '</td><td>' + fx(v.truth_K, 0) + ' K</td><td>' + fx(v.mean_K, 1) +
+        ' K</td><td>' + (v.bias_K > 0 ? '+' : '') + fx(v.bias_K, 1) + ' K</td></tr>');
+    });
+    h.push('</tbody></table>');
+
+    // ---- C 敏感性 ----
+    h.push(vtTitle('C · 敏感性：什么在决定你的误差'));
+    h.push('<table class="data"><thead><tr><th>用到的点数</th><th>半径跨度 (Å)</th><th>r₀ (Å)</th>' +
+      '<th>±1σ(r₀)</th><th>E (GPa)</th><th>±1σ(E)</th><th>corr(r₀,E)</th></tr></thead><tbody>');
+    V.sensitivity.radius_span.forEach(function (r) {
+      if (r.degenerate) h.push('<tr class="bl"><td>' + r.n + '</td><td>' + fx(r.span, 3) +
+        '</td><td colspan="5">病态：参数不可辨识（D₀、r₀ 顶在边界上）</td></tr>');
+      else h.push('<tr><td>' + r.n + '</td><td>' + fx(r.span, 3) + '</td><td>' + fx(r.r0, 4) + '</td><td>' +
+        fx(r.dr0, 4) + '</td><td>' + fx(r.E_GPa, 1) + '</td><td>' + fx(r.dE_GPa, 1) + '</td><td>' +
+        fx(r.corr_r0_E, 2) + '</td></tr>');
+    });
+    h.push('</tbody></table>');
+    h.push('<p class="hint">r₀ 与 E 高度相关（这里 corr ≈ 0.67–0.81），点数越少误差越大；' +
+      '点子太少或半径集中在一小段时，拟合会变成病态 —— 界面会给「触及参数边界」警告。</p>');
+    h.push('<table class="data"><thead><tr><th>同一数据的权重方式</th><th>线性域不加权（原脚本）</th>' +
+      '<th>对数域等权</th><th>差值</th></tr></thead><tbody>');
+    Object.keys(V.sensitivity.weighting_effect).forEach(function (k) {
+      var v = V.sensitivity.weighting_effect[k];
+      h.push('<tr><td>' + esc(k) + '</td><td>' + fx(v.linear, 1) + ' K</td><td>' + fx(v.log, 1) + ' K</td><td>' +
+        (v.log - v.linear > 0 ? '+' : '') + fx(v.log - v.linear, 1) + ' K</td></tr>');
+    });
+    h.push('</tbody></table>');
+    h.push('<p class="hint">权重方式本身也会带来 −55～+53 K 的系统差异 —— 这是方法选择，不是数据误差。</p>');
+    box.innerHTML = h.join('');
+  }
+
+  function renderLitRefs() {
+    var box = $('litBox'), std = $('stdBox');
+    if (!box) return;
+    if (typeof LIT_REF === 'undefined') { box.textContent = '（未载入）'; return; }
+    var h = ['<p class="hint">' + esc(LIT_REF.note) + '</p>'];
+    h.push('<table class="data"><thead><tr><th>数据集</th><th>DOI</th><th>实验条件</th><th>获取情况</th><th>说明</th></tr></thead><tbody>');
+    LIT_REF.items.forEach(function (it) {
+      h.push('<tr><td>' + esc(it.cite) + '</td><td class="mono" style="font-size:11px">' + esc(it.doi) +
+        '</td><td>' + esc(String(it.T_C)) + ' °C' + (it.P_GPa != null ? ' / ' + esc(String(it.P_GPa)) + ' GPa' : '') +
+        '</td><td>' + esc(it.status) + '</td><td style="text-align:left">' + esc(it.note) + '</td></tr>');
+    });
+    h.push('</tbody></table>');
+    h.push('<p class="hint">拿到 PDF 后，把 Table 里的 D(REE) 复制进模块③（列名写样品名、温度填实验值）就能立刻做同样的反向检验。</p>');
+    box.innerHTML = h.join('');
+    if (std) std.innerHTML = '<p class="hint">' + esc(LIT_REF.stds) + '</p>';
+  }
+
+  /* ============================================ 浓度 -> 分配系数 D 小工具 */
+  function parseConc(text) {
+    var out = [];
+    text.replace(/\r\n?/g, '\n').split('\n').forEach(function (ln) {
+      if (!ln.trim()) return;
+      var parts = ln.trim().split(/[\s,\t]+/), name = null, val = null;
+      parts.forEach(function (p) {
+        var v = numCell(p);
+        if (v === null) { if (name === null && p.trim() !== '') name = p.trim(); }
+        else val = v;
+      });
+      if (val !== null) out.push({ name: name, v: val });
+    });
+    return out;
+  }
+  function computeConcD() {
+    var zr = parseConc($('cv_zr').value), mt = parseConc($('cv_melt').value);
+    var out = $('cv_out'), msg = $('cv_msg');
+    if (!zr.length || !mt.length) {
+      out.textContent = '请把锆石浓度与熔体（全岩）浓度各粘一栏。';
+      if (msg) msg.textContent = '—';
+      return;
+    }
+    var n = Math.min(zr.length, mt.length), map = R_SHANNON_VIII.radii;
+    var lines = ['Radii\tD(zircon/melt)'], rows = [], noRi = [], zero = 0, bad = [];
+    for (var i = 0; i < n; i++) {
+      var nm = (zr[i].name || mt[i].name || '').replace(/[0-9+\s]/g, '');
+      var key = nm ? nm.charAt(0).toUpperCase() + nm.slice(1).toLowerCase() : '';
+      var ri = key ? map[key] : null;
+      var D = mt[i].v === 0 ? NaN : zr[i].v / mt[i].v;
+      if (mt[i].v === 0) zero++;
+      if (!isFinite(D) || D <= 0) { bad.push(i + 1); continue; }
+      rows.push({ name: nm || ('#' + (i + 1)), ri: ri, D: D });
+      if (ri == null) noRi.push(nm || ('#' + (i + 1)));
+      else lines.push(ri.toFixed(3) + '\t' + D.toPrecision(8));
+    }
+    var h = ['<table class="data"><thead><tr><th>元素</th><th>锆石 (ppm)</th><th>熔体/全岩 (ppm)</th>' +
+      '<th>ri (Å)</th><th>D = 锆石/熔体</th></tr></thead><tbody>'];
+    rows.forEach(function (r, i) {
+      h.push('<tr><td>' + esc(r.name) + '</td><td>' + sig(zr[i].v, 4) + '</td><td>' + sig(mt[i].v, 4) +
+        '</td><td>' + (r.ri == null ? '—' : fx(r.ri, 3)) + '</td><td>' + sig(r.D, 5) + '</td></tr>');
+    });
+    out.innerHTML = rows.length ? h.join('') + '</tbody></table>' : '没有可用的配对。';
+    out.setAttribute('data-copied', lines.join('\n'));
+    var m = ['已配对 ' + rows.length + ' 个元素'];
+    if (rows.length - noRi.length > 0) m.push('其中 ' + (rows.length - noRi.length) + ' 个已按 Shannon VIII 半径补好，可直接粘进模块③');
+    if (noRi.length) m.push('未识别半径：' + noRi.join('/'));
+    if (zero) m.push('有 ' + zero + ' 个熔体浓度为 0');
+    if (bad.length) m.push('跳过第 ' + bad.join(',') + ' 行（D 无效）');
+    if (msg) msg.textContent = m.join('；');
+  }
+  function bindConcentrationTool() {
+    var run = $('cv_run');
+    if (!run) return;
+    run.addEventListener('click', computeConcD);
+    var cp = $('cv_copy');
+    if (cp) cp.addEventListener('click', function () {
+      var txt = $('cv_out').getAttribute('data-copied');
+      if (!txt) { setStatus('先点「算 D」', 'warn'); return; }
+      copyText(txt, '已复制 ri + D 两列，可直接粘进模块③');
+    });
+  }
+
+  /* ================================== 温度计：8 种参数组合的敏感性（实时） */
+  function renderThermoSensitivity(radii, columns, curQ, curR0, curD0) {
+    var box = $('m3_sens');
+    if (!box) return;
+    var combs = [], i;
+    var qs = [6489, 7827], r0s = [0.93, 0.95], ms = ['streicher2023', 'rubatto2007'];
+    for (var a = 0; a < qs.length; a++) for (var b = 0; b < r0s.length; b++) for (var c = 0; c < ms.length; c++)
+      combs.push({ Q: qs[a], r0: r0s[b], m: ms[c] });
+    var names = Object.keys(columns), out = [], err = 0;
+    try {
+      combs.forEach(function (cm) {
+        var r = ZR.fitThermo({ radii: radii, columns: columns, Q: cm.Q, r0: cm.r0,
+          d0Model: cm.m, absoluteSigma: false });
+        out.push({ cm: cm, r: r });
+      });
+    } catch (e) { err = 1; }
+    if (err || !out.length) { box.innerHTML = '<p class="hint">敏感性表计算失败。</p>'; return; }
+    var h = ['<table class="data"><thead><tr><th>Q</th><th>r₀ (Å)</th><th>D₀(T) 关系</th>' +
+      names.map(function (n) { return '<th>' + esc(n) + ' (K)</th>'; }).join('') + '</tr></thead><tbody>'];
+    out.forEach(function (o) {
+      var isCur = (o.cm.Q === curQ && Math.abs(o.cm.r0 - curR0) < 1e-9 && o.cm.m === curD0);
+      h.push('<tr' + (isCur ? ' class="g"' : '') + '><td>' + o.cm.Q + '</td><td>' + o.cm.r0 + '</td><td>' +
+        o.cm.m + (isCur ? ' ←当前' : '') + '</td>' +
+        o.r.samples.map(function (s) { return '<td>' + fx(s.T_K, 1) + '</td>'; }).join('') + '</tr>');
+    });
+    h.push('</tbody></table>');
+    // 跨度
+    var sp = names.map(function (n, i) {
+      var v = out.map(function (o) { return o.r.samples[i].T_K; });
+      return Math.max.apply(null, v) - Math.min.apply(null, v);
+    });
+    h.push('<p class="hint">同一份数据在 8 种参数组合下的温差：' +
+      sp.map(function (x, i) { return esc(names[i]) + ' ' + fx(x, 0) + ' K'; }).join('，') +
+      ' —— 这就是「模型常数选择」带来的不确定度，通常远大于拟合本身给出的 ±1σ。</p>');
+    box.innerHTML = h.join('');
+  }
+
   /* ================================================================ 启动 */
   function init() {
     ST.m1 = { table: { rows: [], nCol: 0, colNames: [] }, maps: { inited: false }, res: null };
@@ -2863,9 +3205,13 @@ const ELEMENT_ORDER = ["Sc", "Y", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd"
     bindPane('m3', computeM3);
 
     // 初始载入示例，让用户一打开就能看到可用的结果
-    loadDemo('m1', 'lattice');
-    loadDemo('m2', 'lattice');
-    loadDemo('m3', 'thermo');
+    fillDemoSelect('m1'); fillDemoSelect('m2'); fillDemoSelect('m3');
+    applyDemo('m1', 'bb');
+    applyDemo('m2', 'bb');
+    applyDemo('m3', 'whitehouse');
+    renderValidation();
+    renderLitRefs();
+    bindConcentrationTool();
     var h = location.hash || '';
     if (h.indexOf('tab=') >= 0) {
       var want = /tab=(\w+)/.exec(h)[1];

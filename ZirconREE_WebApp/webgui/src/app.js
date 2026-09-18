@@ -1027,6 +1027,7 @@
       '<p class="hint" style="padding:8px 2px 0">温度计是无权重拟合（原脚本不提供 σ），所以不报 χ²/dof，' +
       '改报对数域残差 RMS 与最大偏差 —— 后者约等于「曲线偏离数据点几个 dex」。</p>';
     renderPreviewThermo(pfx, data, res, null);
+    renderThermoSensitivity(data.radii, data.columns, Q, r0, d0m);
     drawM3Charts(res, data);
     setBadge(pfx, res.samples.length + ' 个样品', 'ok');
     setStatus('反演完成 · ' + res.samples.length + ' 个样品', 'ok');
@@ -1274,9 +1275,8 @@
     if (calc) calc.addEventListener('click', compute);
     var clr = $(pfx + '_clear');
     if (clr) clr.addEventListener('click', function () { ta.value = ''; ST[pfx].maps.inited = false; compute(); });
-    var dl = $(pfx + '_demo1'), d2 = $(pfx + '_demo2');
-    if (dl) dl.addEventListener('click', function () { loadDemo(pfx, 'lattice'); });
-    if (d2) d2.addEventListener('click', function () { loadDemo(pfx, 'synth'); });
+    var dsel = $(pfx + '_demo');
+    if (dsel) dsel.addEventListener('change', function () { applyDemo(pfx, dsel.value); });
     var fr = $(pfx + '_fillri');
     if (fr) fr.addEventListener('click', function () { fillRadii(pfx, compute); });
     var rt = $(pfx + '_readTP');
@@ -1304,31 +1304,70 @@
       if (f) loadFile(pfx, f, compute);
     });
   }
-  function loadDemo(pfx, kind) {
-    var ta = textareaOf(pfx);
-    if (kind === 'lattice') {
+  /* ============================================== 示例数据集（含真值） */
+  var DEMO_DEFS = [
+    { key: 'bb', mods: ['m1', 'm2'], label: 'Burnham & Berry (2012) 实验 · 温度已知',
+      note: '实验数据（13 个元素，1295 °C，≈1 atm）。温度独立已知 ⇒ 可用模块③反向检验：反演应回到 ≈1568 K。' },
+    { key: 'syn_a', mods: ['m1', 'm2'], label: '合成 A · 中温 / 中等 E（真值已知）' },
+    { key: 'syn_b', mods: ['m1', 'm2'], label: '合成 B · 低温 / 高 E（真值已知）' },
+    { key: 'syn_c', mods: ['m1', 'm2'], label: '合成 C · 高温 / 低 E（真值已知）' },
+    { key: 'whitehouse', mods: ['m3'], label: 'Whitehouse & Kamber (2002) 自然样品（模型失效案例）' },
+    { key: 'thermo_syn', mods: ['m3'], label: '合成 · 三个已知温度样品（真值已知）' }
+  ];
+  function demoByKey(k) {
+    for (var i = 0; i < DEMO_DEFS.length; i++) if (DEMO_DEFS[i].key === k) return DEMO_DEFS[i];
+    return null;
+  }
+  function fillDemoSelect(pfx) {
+    var sel = $(pfx + '_demo');
+    if (!sel) return;
+    sel.innerHTML = DEMO_DEFS.filter(function (d) { return d.mods.indexOf(pfx) >= 0; })
+      .map(function (d) { return '<option value="' + d.key + '">' + esc(d.label) + '</option>'; }).join('');
+  }
+  function applyDemo(pfx, key) {
+    var sel = $(pfx + '_demo'), ta = textareaOf(pfx), note = '';
+    var def = demoByKey(key);
+    if (sel && sel.value !== key) sel.value = key;
+    if (key === 'bb') {
       ta.value = 'Element\tri\tDi\t1s\tT [C]\tP [GPa]\n' + DEMO_LATTICE.rows.map(function (r) {
         return [r.el, r.ri.toFixed(3), r.di, r.s1, DEMO_LATTICE.T_C, DEMO_LATTICE.P_GPa].join('\t');
       }).join('\n');
       if ($(pfx + '_T')) $(pfx + '_T').value = DEMO_LATTICE.T_C;
       if ($(pfx + '_P')) $(pfx + '_P').value = DEMO_LATTICE.P_GPa;
-      setStatus('已载入示例：' + DEMO_LATTICE.name, 'ok');
-    } else if (kind === 'synth') {
-      ta.value = 'Element\tri\tDi\t1s\n' + DEMO_SYNTH.rows.map(function (r) {
-        return [r.el, r.ri.toFixed(3), r.di.toPrecision(8), r.s1.toPrecision(6)].join('\t');
-      }).join('\n');
-      if ($(pfx + '_T')) $(pfx + '_T').value = DEMO_SYNTH.T_C;
-      setStatus('已载入示例：' + DEMO_SYNTH.name + '（真值 D₀=' + DEMO_SYNTH.truth.D0 + '，r₀=' + DEMO_SYNTH.truth.r0 + '，E=' + DEMO_SYNTH.truth.E_GPa + ' GPa）', 'ok');
-    } else {
+      note = def ? def.note : '';
+    } else if (key === 'whitehouse') {
       var cols = Object.keys(DEMO_PARTITION.columns);
       ta.value = 'Radii\t' + cols.join('\t') + '\n' + DEMO_PARTITION.radii.map(function (r, i) {
         return [r.toFixed(3)].concat(cols.map(function (c) { return DEMO_PARTITION.columns[c][i]; })).join('\t');
       }).join('\n');
-      setStatus('已载入示例：' + DEMO_PARTITION.name, 'ok');
+      note = WH_SOURCE.note;
+    } else if (key === 'thermo_syn') {
+      var sy = DEMO_THERMO_SYN, cs = Object.keys(sy.columns);
+      ta.value = 'Radii\t' + cs.join('\t') + '\n' + sy.radii.map(function (r, i) {
+        return [r.toFixed(3)].concat(cs.map(function (c) { return sy.columns[c][i].toPrecision(8); })).join('\t');
+      }).join('\n');
+      if ($(pfx + '_Q')) $(pfx + '_Q').value = String(sy.Q);
+      if ($(pfx + '_r0')) $(pfx + '_r0').value = String(sy.r0);
+      if ($(pfx + '_d0')) $(pfx + '_d0').value = sy.d0Model;
+      var tv = Object.keys(sy.truth).map(function (k) {
+        return k + ' = ' + (sy.truth[k] - 273.15).toFixed(0) + ' °C';
+      }).join('，');
+      note = sy.note + '　真值：' + tv + '　→ 反演结果应该回到这些温度。';
+    } else {
+      var i, sp = null;
+      for (i = 0; i < DEMO_SERIES.length; i++) if (DEMO_SERIES[i].key === key) sp = DEMO_SERIES[i];
+      if (!sp) return;
+      ta.value = 'Element\tri\tDi\t1s\n' + sp.rows.map(function (r) {
+        return [r.el, r.ri.toFixed(3), r.di.toPrecision(8), r.s1.toPrecision(6)].join('\t');
+      }).join('\n');
+      if ($(pfx + '_T')) $(pfx + '_T').value = sp.T_C;
+      note = sp.note + '　→ 拟合结果应接近这组真值。';
     }
+    var nb = $(pfx + '_demoNote');
+    if (nb) nb.textContent = note || '—';
     ST[pfx].maps.inited = false;
-    var fn = { m1: computeM1, m2: computeM2, m3: computeM3 }[pfx];
-    fn();
+    ({ m1: computeM1, m2: computeM2, m3: computeM3 }[pfx])();
+    setStatus('已载入 ' + (def ? def.label : key), 'ok');
   }
   function loadFile(pfx, file, compute) {
     var name = file.name.toLowerCase();
@@ -1460,9 +1499,10 @@
       T('温度计闭合 1500 K', back.samples[0].T_K, 1500, 1e-8);
 
       // 三个面板端到端：载入示例 -> 自动计算
-      loadDemo('m1', 'lattice');
-      loadDemo('m2', 'lattice');
-      loadDemo('m3', 'thermo');
+      fillDemoSelect('m1'); fillDemoSelect('m2'); fillDemoSelect('m3');
+      applyDemo('m1', 'bb');
+      applyDemo('m2', 'bb');
+      applyDemo('m3', 'whitehouse');
 
       // 每个标签页可切换
       var tabs = document.querySelectorAll('nav.tabs button');
@@ -1514,6 +1554,255 @@
     return { pass: pass, fail: fail, log: out.join('\n') };
   }
 
+
+  /* ============================================ 验证结果（validate.py 产出） */
+  function copyText(txt, okMsg) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () { setStatus(okMsg, 'ok'); },
+        function () { fallbackCopy(txt); });
+    } else fallbackCopy(txt);
+  }
+  function vtTitle(t) { return '<div class="vt">' + t + '</div>'; }
+
+  function renderValidation() {
+    var box = $('valBox');
+    if (!box) return;
+    if (typeof VALIDATION === 'undefined' || !VALIDATION.reverse) {
+      box.innerHTML = '<p class="hint">验证数据未载入。请在 webgui 目录依次运行 <code>python validate.py</code>、' +
+        '<code>python make_demos.py</code>，再重新构建。</p>';
+      return;
+    }
+    var V = VALIDATION, h = [];
+    if (V.meta && V.meta.note) h.push('<p class="hint">' + esc(V.meta.note) + '</p>');
+
+    // ---- A1 反向检验 ----
+    var bb = V.reverse.burnham_berry_2012;
+    h.push(vtTitle('A1 · 反向检验：Burnham &amp; Berry (2012) 实验，温度 ' + fx(bb.T_known_C, 0) +
+      ' °C = ' + fx(bb.T_known_K, 2) + ' K（独立已知）'));
+    h.push('<table class="data"><thead><tr><th>Q</th><th>r₀ (Å)</th><th>D₀(T) 关系</th><th>反演 T (K)</th>' +
+      '<th>±1σ</th><th>与实验温度之差</th></tr></thead><tbody>');
+    Object.keys(bb.thermo_log).forEach(function (k) {
+      var v = bb.thermo_log[k], p = k.split('_');
+      h.push('<tr' + (Math.abs(v.bias_K) < 30 ? ' class="g"' : '') + '><td>' + p[0] + '</td><td>' + p[1] +
+        '</td><td>' + p[2] + '</td><td>' + fx(v.T_K, 1) + '</td><td>' + fx(v.dT_K, 1) + '</td><td>' +
+        (v.bias_K > 0 ? '+' : '') + fx(v.bias_K, 1) + ' K</td></tr>');
+    });
+    h.push('</tbody></table>');
+    var dk = bb.thermo_log['6489_0.93_streicher2023'], sp = V.sensitivity.thermo_model_spread;
+    if (dk) {
+      h.push('<div class="note">默认参数（Q₁ + r₀ = 0.93 Å + Streicher 的 D₀(T)）反演得到 <b>' + fx(dk.T_K, 1) +
+        ' K</b>，与实验温度相差 <b>' + (dk.bias_K > 0 ? '+' : '') + fx(dk.bias_K, 1) + ' K</b>。' +
+        '但 8 种参数组合整体跨度 <b>' + fx(sp.span_K, 0) + ' K</b>（' + fx(sp.min_bias_K, 0) + ' ～ +' +
+        fx(sp.max_bias_K, 0) + ' K）—— <b>误差预算由模型常数的选择主导，不是数据点</b>。' +
+        '把 Rubatto 的 D₀(T) 关系用在这种干体系高温实验上会偏 −150～−220 K，所以 D₀(T) 关系必须与体系匹配。</div>');
+    }
+    var fr = bb.free;
+    h.push('<p class="hint">同一份数据的晶格应变拟合：D₀ = ' + fx(fr.D0, 3) + ' ± ' + fx(fr.dD0, 3) +
+      '，r₀ = ' + fx(fr.r0, 4) + ' ± ' + fx(fr.dr0, 4) + ' Å，E = ' + fx(fr.E_GPa, 1) + ' ± ' + fx(fr.dE_GPa, 1) +
+      ' GPa；RMS(log₁₀D) = ' + fx(fr.rms_log, 3) + ' dex（≈ ' + fx(Math.pow(10, fr.rms_log), 2) + ' 倍），' +
+      'corr(r₀,E) = ' + fx(fr.corr_r0_E, 2) + '。</p>');
+
+    // ---- A2 反面案例 ----
+    h.push(vtTitle('A2 · 反面案例：Whitehouse &amp; Kamber (2002) 自然样品（该文已知模型失效）'));
+    h.push('<table class="data"><thead><tr><th>样品</th><th>D₀</th><th>r₀ (Å)</th><th>E (GPa)</th>' +
+      '<th>RMS(log₁₀D)</th><th>最大偏差</th><th>La–Pr 最大偏差</th></tr></thead><tbody>');
+    Object.keys(V.natural.samples).forEach(function (k) {
+      var r = V.natural.samples[k];
+      h.push('<tr class="bl"><td>' + esc(k) + '</td><td>' + fx(r.D0, 0) + (r.D0 > 1999 ? ' ⚠顶界' : '') +
+        '</td><td>' + fx(r.r0, 4) + '</td><td>' + fx(r.E_GPa, 0) + '</td><td>' + fx(r.rms_log, 2) +
+        '</td><td>' + fx(r.max_log, 2) + ' dex（' + fx(Math.pow(10, r.max_log), 0) + ' 倍）</td><td>' +
+        fx(r.lree_max_log, 2) + ' dex</td></tr>');
+    });
+    h.push('</tbody></table>');
+    h.push('<div class="note warn">这两件样品上，自由拟合的 D₀ 直接顶到搜索上界 2000、r₀ 掉到 0.83–0.85 Å' +
+      '（锆石位点半径本应 0.93–0.96 Å）—— <b>模型在这份数据上根本不成立</b>。' +
+      '工具的应对是：给出「触及参数边界」警告、把 LREE 高达 1.4 dex 的残差画在残差图上，' +
+      '而不是输出一个看似漂亮的拟合。这正是这套界面最该看的地方。</div>');
+
+    // ---- B 蒙特卡洛 ----
+    h.push(vtTitle('B · 蒙特卡洛误差标定（合成数据、真值已知，每组 400 次重复）'));
+    h.push('<table class="data"><thead><tr><th>数据集</th><th>噪声</th><th>参数</th><th>相对偏差</th>' +
+      '<th>报出的 1σ</th><th>1σ 覆盖率</th><th>2σ 覆盖率</th></tr></thead><tbody>');
+    Object.keys(V.montecarlo.free).forEach(function (k) {
+      var g = V.montecarlo.free[k];
+      ['D0', 'r0', 'E_GPa'].forEach(function (p) {
+        var r = g.res[p];
+        h.push('<tr><td>' + esc(g.label) + '</td><td>' + fx(g.noise * 100, 0) + '%</td><td>' + p +
+          '</td><td>' + (r.bias_pct > 0 ? '+' : '') + fx(r.bias_pct, 1) + '%</td><td>' + sig(r.mean_err, 3) +
+          '</td><td>' + fx(r.cov1, 2) + '</td><td>' + fx(r.cov2, 2) + '</td></tr>');
+      });
+    });
+    h.push('</tbody></table>');
+    h.push('<p class="hint">覆盖率的目标值是 1σ → 0.68、2σ → 0.95。可以看到报出的误差基本诚实：' +
+      '偏差都在 ±0.5% 以内，1σ 覆盖率 0.65–0.73，2σ 覆盖率 0.94–0.97。</p>');
+
+    h.push('<table class="data"><thead><tr><th>温度计真值 T</th><th>噪声 5%：偏差 / RMSE / 1σ 覆盖率</th>' +
+      '<th>10%</th><th>20%</th></tr></thead><tbody>');
+    var seen = {};
+    Object.keys(V.montecarlo.thermo).forEach(function (k) { seen[k.split('_')[0]] = 1; });
+    Object.keys(seen).forEach(function (tk) {
+      h.push('<tr><td>' + tk.replace('C', ' K') + '</td>');
+      ['5', '10', '20'].forEach(function (n) {
+        var v = V.montecarlo.thermo[tk + '_' + n];
+        h.push('<td>' + (v ? (v.bias_K > 0 ? '+' : '') + fx(v.bias_K, 1) + ' K / ' + fx(v.rmse_K, 1) +
+          ' K / ' + fx(v.cov1, 2) : '—') + '</td>');
+      });
+      h.push('</tr>');
+    });
+    h.push('</tbody></table>');
+    h.push('<p class="hint">温度计反演的偏差随温度和噪声缓慢增大（1573 K、20% 噪声时 +4.5 K），覆盖率仍在 0.66–0.69。</p>');
+
+    h.push('<table class="data"><thead><tr><th>模型误用情形</th><th>真值 T</th><th>平均反演 T</th><th>偏差</th></tr></thead><tbody>');
+    Object.keys(V.montecarlo.thermo_mismodel).forEach(function (k) {
+      var v = V.montecarlo.thermo_mismodel[k];
+      h.push('<tr class="bl"><td>' + esc(k) + '</td><td>' + fx(v.truth_K, 0) + ' K</td><td>' + fx(v.mean_K, 1) +
+        ' K</td><td>' + (v.bias_K > 0 ? '+' : '') + fx(v.bias_K, 1) + ' K</td></tr>');
+    });
+    h.push('</tbody></table>');
+
+    // ---- C 敏感性 ----
+    h.push(vtTitle('C · 敏感性：什么在决定你的误差'));
+    h.push('<table class="data"><thead><tr><th>用到的点数</th><th>半径跨度 (Å)</th><th>r₀ (Å)</th>' +
+      '<th>±1σ(r₀)</th><th>E (GPa)</th><th>±1σ(E)</th><th>corr(r₀,E)</th></tr></thead><tbody>');
+    V.sensitivity.radius_span.forEach(function (r) {
+      if (r.degenerate) h.push('<tr class="bl"><td>' + r.n + '</td><td>' + fx(r.span, 3) +
+        '</td><td colspan="5">病态：参数不可辨识（D₀、r₀ 顶在边界上）</td></tr>');
+      else h.push('<tr><td>' + r.n + '</td><td>' + fx(r.span, 3) + '</td><td>' + fx(r.r0, 4) + '</td><td>' +
+        fx(r.dr0, 4) + '</td><td>' + fx(r.E_GPa, 1) + '</td><td>' + fx(r.dE_GPa, 1) + '</td><td>' +
+        fx(r.corr_r0_E, 2) + '</td></tr>');
+    });
+    h.push('</tbody></table>');
+    h.push('<p class="hint">r₀ 与 E 高度相关（这里 corr ≈ 0.67–0.81），点数越少误差越大；' +
+      '点子太少或半径集中在一小段时，拟合会变成病态 —— 界面会给「触及参数边界」警告。</p>');
+    h.push('<table class="data"><thead><tr><th>同一数据的权重方式</th><th>线性域不加权（原脚本）</th>' +
+      '<th>对数域等权</th><th>差值</th></tr></thead><tbody>');
+    Object.keys(V.sensitivity.weighting_effect).forEach(function (k) {
+      var v = V.sensitivity.weighting_effect[k];
+      h.push('<tr><td>' + esc(k) + '</td><td>' + fx(v.linear, 1) + ' K</td><td>' + fx(v.log, 1) + ' K</td><td>' +
+        (v.log - v.linear > 0 ? '+' : '') + fx(v.log - v.linear, 1) + ' K</td></tr>');
+    });
+    h.push('</tbody></table>');
+    h.push('<p class="hint">权重方式本身也会带来 −55～+53 K 的系统差异 —— 这是方法选择，不是数据误差。</p>');
+    box.innerHTML = h.join('');
+  }
+
+  function renderLitRefs() {
+    var box = $('litBox'), std = $('stdBox');
+    if (!box) return;
+    if (typeof LIT_REF === 'undefined') { box.textContent = '（未载入）'; return; }
+    var h = ['<p class="hint">' + esc(LIT_REF.note) + '</p>'];
+    h.push('<table class="data"><thead><tr><th>数据集</th><th>DOI</th><th>实验条件</th><th>获取情况</th><th>说明</th></tr></thead><tbody>');
+    LIT_REF.items.forEach(function (it) {
+      h.push('<tr><td>' + esc(it.cite) + '</td><td class="mono" style="font-size:11px">' + esc(it.doi) +
+        '</td><td>' + esc(String(it.T_C)) + ' °C' + (it.P_GPa != null ? ' / ' + esc(String(it.P_GPa)) + ' GPa' : '') +
+        '</td><td>' + esc(it.status) + '</td><td style="text-align:left">' + esc(it.note) + '</td></tr>');
+    });
+    h.push('</tbody></table>');
+    h.push('<p class="hint">拿到 PDF 后，把 Table 里的 D(REE) 复制进模块③（列名写样品名、温度填实验值）就能立刻做同样的反向检验。</p>');
+    box.innerHTML = h.join('');
+    if (std) std.innerHTML = '<p class="hint">' + esc(LIT_REF.stds) + '</p>';
+  }
+
+  /* ============================================ 浓度 -> 分配系数 D 小工具 */
+  function parseConc(text) {
+    var out = [];
+    text.replace(/\r\n?/g, '\n').split('\n').forEach(function (ln) {
+      if (!ln.trim()) return;
+      var parts = ln.trim().split(/[\s,\t]+/), name = null, val = null;
+      parts.forEach(function (p) {
+        var v = numCell(p);
+        if (v === null) { if (name === null && p.trim() !== '') name = p.trim(); }
+        else val = v;
+      });
+      if (val !== null) out.push({ name: name, v: val });
+    });
+    return out;
+  }
+  function computeConcD() {
+    var zr = parseConc($('cv_zr').value), mt = parseConc($('cv_melt').value);
+    var out = $('cv_out'), msg = $('cv_msg');
+    if (!zr.length || !mt.length) {
+      out.textContent = '请把锆石浓度与熔体（全岩）浓度各粘一栏。';
+      if (msg) msg.textContent = '—';
+      return;
+    }
+    var n = Math.min(zr.length, mt.length), map = R_SHANNON_VIII.radii;
+    var lines = ['Radii\tD(zircon/melt)'], rows = [], noRi = [], zero = 0, bad = [];
+    for (var i = 0; i < n; i++) {
+      var nm = (zr[i].name || mt[i].name || '').replace(/[0-9+\s]/g, '');
+      var key = nm ? nm.charAt(0).toUpperCase() + nm.slice(1).toLowerCase() : '';
+      var ri = key ? map[key] : null;
+      var D = mt[i].v === 0 ? NaN : zr[i].v / mt[i].v;
+      if (mt[i].v === 0) zero++;
+      if (!isFinite(D) || D <= 0) { bad.push(i + 1); continue; }
+      rows.push({ name: nm || ('#' + (i + 1)), ri: ri, D: D });
+      if (ri == null) noRi.push(nm || ('#' + (i + 1)));
+      else lines.push(ri.toFixed(3) + '\t' + D.toPrecision(8));
+    }
+    var h = ['<table class="data"><thead><tr><th>元素</th><th>锆石 (ppm)</th><th>熔体/全岩 (ppm)</th>' +
+      '<th>ri (Å)</th><th>D = 锆石/熔体</th></tr></thead><tbody>'];
+    rows.forEach(function (r, i) {
+      h.push('<tr><td>' + esc(r.name) + '</td><td>' + sig(zr[i].v, 4) + '</td><td>' + sig(mt[i].v, 4) +
+        '</td><td>' + (r.ri == null ? '—' : fx(r.ri, 3)) + '</td><td>' + sig(r.D, 5) + '</td></tr>');
+    });
+    out.innerHTML = rows.length ? h.join('') + '</tbody></table>' : '没有可用的配对。';
+    out.setAttribute('data-copied', lines.join('\n'));
+    var m = ['已配对 ' + rows.length + ' 个元素'];
+    if (rows.length - noRi.length > 0) m.push('其中 ' + (rows.length - noRi.length) + ' 个已按 Shannon VIII 半径补好，可直接粘进模块③');
+    if (noRi.length) m.push('未识别半径：' + noRi.join('/'));
+    if (zero) m.push('有 ' + zero + ' 个熔体浓度为 0');
+    if (bad.length) m.push('跳过第 ' + bad.join(',') + ' 行（D 无效）');
+    if (msg) msg.textContent = m.join('；');
+  }
+  function bindConcentrationTool() {
+    var run = $('cv_run');
+    if (!run) return;
+    run.addEventListener('click', computeConcD);
+    var cp = $('cv_copy');
+    if (cp) cp.addEventListener('click', function () {
+      var txt = $('cv_out').getAttribute('data-copied');
+      if (!txt) { setStatus('先点「算 D」', 'warn'); return; }
+      copyText(txt, '已复制 ri + D 两列，可直接粘进模块③');
+    });
+  }
+
+  /* ================================== 温度计：8 种参数组合的敏感性（实时） */
+  function renderThermoSensitivity(radii, columns, curQ, curR0, curD0) {
+    var box = $('m3_sens');
+    if (!box) return;
+    var combs = [], i;
+    var qs = [6489, 7827], r0s = [0.93, 0.95], ms = ['streicher2023', 'rubatto2007'];
+    for (var a = 0; a < qs.length; a++) for (var b = 0; b < r0s.length; b++) for (var c = 0; c < ms.length; c++)
+      combs.push({ Q: qs[a], r0: r0s[b], m: ms[c] });
+    var names = Object.keys(columns), out = [], err = 0;
+    try {
+      combs.forEach(function (cm) {
+        var r = ZR.fitThermo({ radii: radii, columns: columns, Q: cm.Q, r0: cm.r0,
+          d0Model: cm.m, absoluteSigma: false });
+        out.push({ cm: cm, r: r });
+      });
+    } catch (e) { err = 1; }
+    if (err || !out.length) { box.innerHTML = '<p class="hint">敏感性表计算失败。</p>'; return; }
+    var h = ['<table class="data"><thead><tr><th>Q</th><th>r₀ (Å)</th><th>D₀(T) 关系</th>' +
+      names.map(function (n) { return '<th>' + esc(n) + ' (K)</th>'; }).join('') + '</tr></thead><tbody>'];
+    out.forEach(function (o) {
+      var isCur = (o.cm.Q === curQ && Math.abs(o.cm.r0 - curR0) < 1e-9 && o.cm.m === curD0);
+      h.push('<tr' + (isCur ? ' class="g"' : '') + '><td>' + o.cm.Q + '</td><td>' + o.cm.r0 + '</td><td>' +
+        o.cm.m + (isCur ? ' ←当前' : '') + '</td>' +
+        o.r.samples.map(function (s) { return '<td>' + fx(s.T_K, 1) + '</td>'; }).join('') + '</tr>');
+    });
+    h.push('</tbody></table>');
+    // 跨度
+    var sp = names.map(function (n, i) {
+      var v = out.map(function (o) { return o.r.samples[i].T_K; });
+      return Math.max.apply(null, v) - Math.min.apply(null, v);
+    });
+    h.push('<p class="hint">同一份数据在 8 种参数组合下的温差：' +
+      sp.map(function (x, i) { return esc(names[i]) + ' ' + fx(x, 0) + ' K'; }).join('，') +
+      ' —— 这就是「模型常数选择」带来的不确定度，通常远大于拟合本身给出的 ±1σ。</p>');
+    box.innerHTML = h.join('');
+  }
+
   /* ================================================================ 启动 */
   function init() {
     ST.m1 = { table: { rows: [], nCol: 0, colNames: [] }, maps: { inited: false }, res: null };
@@ -1562,9 +1851,13 @@
     bindPane('m3', computeM3);
 
     // 初始载入示例，让用户一打开就能看到可用的结果
-    loadDemo('m1', 'lattice');
-    loadDemo('m2', 'lattice');
-    loadDemo('m3', 'thermo');
+    fillDemoSelect('m1'); fillDemoSelect('m2'); fillDemoSelect('m3');
+    applyDemo('m1', 'bb');
+    applyDemo('m2', 'bb');
+    applyDemo('m3', 'whitehouse');
+    renderValidation();
+    renderLitRefs();
+    bindConcentrationTool();
     var h = location.hash || '';
     if (h.indexOf('tab=') >= 0) {
       var want = /tab=(\w+)/.exec(h)[1];
