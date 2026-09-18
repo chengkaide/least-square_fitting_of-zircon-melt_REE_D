@@ -1,0 +1,6 @@
+# 本地工具目录（WorkBuddy 会话日志与交付概览，不随仓库分发）
+.workbuddy/
+
+# 构建 / 测试临时产物
+ZirconREE_WebApp/_shots/
+*.tmp

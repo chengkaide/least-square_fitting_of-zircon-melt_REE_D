@@ -1,0 +1,2888 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>锆石–熔体 REE 分配系数工具</title>
+<style>/* ==========================================================================
+   style.css -- 深色为默认（匹配 IDE 主题），可切换浅色
+   ==========================================================================*/
+:root {
+  --bg: #14171c;
+  --panel: #1b1f26;
+  --panel2: #212733;
+  --line: #2d3542;
+  --line2: #3a4453;
+  --text: #e7ebf2;
+  --muted: #97a3b6;
+  --accent: #4f9cf9;
+  --accent-dim: #2c4a75;
+  --ok: #3ecf8e;
+  --warn: #f0a52b;
+  --err: #f0616d;
+  --curve: #ff5c5c;
+  --pt: #e7ebf2;
+  --grid: #262c36;
+  --shadow: 0 1px 0 rgba(255, 255, 255, .03), 0 8px 24px rgba(0, 0, 0, .35);
+  --radius: 10px;
+}
+body.light {
+  --bg: #f4f6fa;
+  --panel: #ffffff;
+  --panel2: #f7f9fc;
+  --line: #dde3ec;
+  --line2: #c7d0dd;
+  --text: #1c2330;
+  --muted: #64708a;
+  --accent: #1668d6;
+  --accent-dim: #d3e3fa;
+  --ok: #1a9e6a;
+  --warn: #b3730a;
+  --err: #d13b48;
+  --curve: #d61f26;
+  --pt: #1c2330;
+  --grid: #e8ecf3;
+  --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 8px 20px rgba(16, 24, 40, .08);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 13.5px/1.6 -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.mono, .num, input[type=text], input[type=number], textarea, table.data td {
+  font-family: "JetBrains Mono", ui-monospace, Consolas, "Courier New", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- header */
+.app { max-width: 1560px; margin: 0 auto; padding: 0 20px 40px; }
+header {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 18px 0 14px; flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo {
+  width: 40px; height: 40px; border-radius: 9px; flex: none;
+  background: linear-gradient(140deg, var(--accent), #7d5cf6);
+  color: #fff; font-weight: 700; font-size: 15px;
+  display: flex; align-items: center; justify-content: center; letter-spacing: .5px;
+}
+h1 { font-size: 17px; margin: 0; font-weight: 650; letter-spacing: .2px; }
+.sub { margin: 1px 0 0; font-size: 12px; color: var(--muted); }
+.hdr-actions { display: flex; align-items: center; gap: 8px; }
+.pill {
+  font-size: 12px; padding: 3px 10px; border-radius: 20px;
+  border: 1px solid var(--line2); color: var(--muted); white-space: nowrap;
+}
+.pill.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, transparent); }
+.pill.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, transparent); }
+.pill.err { color: var(--err); border-color: color-mix(in srgb, var(--err) 45%, transparent); }
+
+/* ------------------------------------------------------------------ tabs */
+nav.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 18px; flex-wrap: wrap; }
+nav.tabs button {
+  background: none; border: 0; border-bottom: 2px solid transparent;
+  color: var(--muted); font: inherit; font-size: 13.5px; padding: 9px 14px; cursor: pointer;
+  border-radius: 6px 6px 0 0;
+}
+nav.tabs button:hover { color: var(--text); background: var(--panel); }
+nav.tabs button.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+/* --------------------------------------------------------------- layout */
+main { display: block; }
+.pane { display: none; }
+.pane.active { display: block; }
+.cols { display: grid; grid-template-columns: minmax(360px, 460px) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 1120px) { .cols { grid-template-columns: 1fr; } }
+.col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+/* ---------------------------------------------------------------- cards */
+.card {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+}
+.card > h2 {
+  font-size: 12px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--line);
+  background: var(--panel2);
+}
+.card > .body { padding: 14px; }
+.card > .body + .body { border-top: 1px solid var(--line); }
+
+/* ---------------------------------------------------------------- forms */
+label.f { display: block; font-size: 12px; color: var(--muted); margin: 0 0 4px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+input[type=text], input[type=number], select {
+  width: 100%; background: var(--bg); color: var(--text);
+  border: 1px solid var(--line2); border-radius: 7px; padding: 6px 9px; font-size: 13px;
+}
+input[type=number] { font-family: ui-monospace, Consolas, monospace; }
+select { cursor: pointer; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+input[type=checkbox] { accent-color: var(--accent); }
+button {
+  background: var(--panel2); color: var(--text); border: 1px solid var(--line2);
+  border-radius: 7px; padding: 6px 12px; font: inherit; font-size: 12.5px; cursor: pointer;
+  transition: background .12s, border-color .12s;
+}
+button:hover { background: var(--line); border-color: var(--line2); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+button.primary:hover { filter: brightness(1.1); }
+button.tiny { padding: 3px 8px; font-size: 11.5px; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.row.between { justify-content: space-between; }
+.hint { font-size: 11.5px; color: var(--muted); margin: 6px 0 0; }
+.hint code { background: var(--bg); border: 1px solid var(--line); padding: 1px 4px; border-radius: 4px; }
+
+textarea {
+  width: 100%; min-height: 172px; resize: vertical;
+  background: var(--bg); color: var(--text); border: 1px solid var(--line2);
+  border-radius: 7px; padding: 8px 10px; font-size: 12.5px; line-height: 1.5;
+}
+.drop {
+  border: 1.5px dashed var(--line2); border-radius: 8px; padding: 10px;
+  text-align: center; color: var(--muted); font-size: 12px; margin-top: 8px;
+}
+.drop.hot { border-color: var(--accent); color: var(--accent); background: var(--panel2); }
+
+/* --------------------------------------------------------------- tables */
+table.data { width: 100%; border-collapse: collapse; font-size: 12px; }
+table.data th, table.data td { padding: 4px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+table.data th { color: var(--muted); font-weight: 600; text-align: right; background: var(--panel2); position: sticky; top: 0; }
+table.data th:first-child, table.data td:first-child { text-align: left; }
+table.data tbody tr:last-child td { border-bottom: 0; }
+table.data tr.bl { color: var(--err); }
+.scroll { max-height: 260px; overflow: auto; border: 1px solid var(--line); border-radius: 7px; }
+.scroll.tall { max-height: 420px; }
+
+/* --------------------------------------------------------------- result */
+.result-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.bigvals { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.bv { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.bv .k { font-size: 11px; color: var(--muted); letter-spacing: .04em; }
+.bv .v { font-size: 20px; font-weight: 650; letter-spacing: .01em; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.bv .u { font-size: 12px; color: var(--muted); font-weight: 400; }
+.bv .e { font-size: 12px; color: var(--muted); }
+pre.report {
+  margin: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 7px;
+  padding: 10px 12px; font-size: 12px; line-height: 1.55; overflow: auto; max-height: 320px;
+  font-family: ui-monospace, Consolas, monospace; white-space: pre; color: var(--text);
+}
+.msgs { list-style: none; margin: 8px 0 0; padding: 0; font-size: 12px; }
+.msgs li { padding: 3px 0 3px 18px; position: relative; color: var(--muted); }
+.msgs li:before { position: absolute; left: 2px; top: 3px; }
+.msgs li.e { color: var(--err); } .msgs li.e:before { content: "✕"; }
+.msgs li.w { color: var(--warn); } .msgs li.w:before { content: "!"; }
+.msgs li.i:before { content: "·"; }
+.msgs li.g { color: var(--ok); } .msgs li.g:before { content: "✓"; }
+
+canvas { display: block; width: 100%; }
+.chartwrap { padding: 10px 12px 4px; }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: 11px; padding: 2px 8px; border-radius: 20px; border: 1px solid var(--line2); color: var(--muted); }
+.tag.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+.tag.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+.tag.err { color: var(--err); border-color: color-mix(in srgb, var(--err) 40%, transparent); }
+
+/* ------------------------------------------------------------ about page */
+.doc { max-width: 900px; }
+
+/* ------------------------------------------------------ 总览：流程图 */
+.flow { display: flex; align-items: stretch; flex-wrap: wrap; gap: 4px; }
+.stage {
+  flex: 1 1 148px; background: var(--panel2); border: 1px solid var(--line2);
+  border-radius: 10px; padding: 10px 12px;
+}
+.stage .n { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; color: var(--accent); }
+.stage .t { font-size: 13.5px; font-weight: 650; margin: 3px 0 4px; }
+.stage .d { font-size: 11.5px; color: var(--muted); line-height: 1.55; }
+.arw { display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 20px; padding: 0 2px; }
+@media (max-width: 900px) {
+  .flow { flex-direction: column; }
+  .arw { transform: rotate(90deg); padding: 2px 0; }
+}
+
+.sech { font-size: 12.5px; font-weight: 650; letter-spacing: .06em; color: var(--muted);
+        text-transform: uppercase; margin: 20px 0 8px; }
+.pick { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; }
+.pick-card .body { display: flex; flex-direction: column; gap: 8px; height: 100%; }
+.ptag { font-size: 14px; font-weight: 650; }
+.pd { margin: 0; font-size: 12.5px; color: var(--muted); }
+.pick-card .io { font-size: 12.5px; display: flex; gap: 8px; align-items: baseline; }
+.pick-card .io b { flex: none; font-size: 10.5px; letter-spacing: .06em; color: var(--accent);
+                   border: 1px solid var(--line2); border-radius: 4px; padding: 0 5px; }
+.pick-card button { margin-top: auto; align-self: flex-start; }
+ol.steps { margin: 0; padding-left: 20px; font-size: 13px; }
+ol.steps li { margin: 5px 0; }
+
+/* ------------------------------------------- 「你要输入 → 你将得到」 */
+.strip {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px;
+  background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: 8px; padding: 10px 14px; margin-bottom: 14px;
+}
+.strip .in, .strip .out { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.strip b { font-size: 10.5px; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; }
+.strip span { font-size: 12.5px; color: var(--text); }
+.strip .sep { color: var(--accent); font-size: 20px; }
+@media (max-width: 700px) { .strip { grid-template-columns: 1fr; } .strip .sep { transform: rotate(90deg); } }
+
+/* ------------------------------------------------------------ 折叠区 */
+details.adv { border-top: 1px dashed var(--line2); margin-top: 12px; padding-top: 9px; }
+details.adv > summary {
+  cursor: pointer; font-size: 12px; color: var(--muted); list-style: none; user-select: none;
+}
+details.adv > summary::-webkit-details-marker { display: none; }
+details.adv > summary:before { content: "▸ "; color: var(--accent); }
+details.adv[open] > summary:before { content: "▾ "; }
+details.adv > summary:hover { color: var(--text); }
+details.adv .advbody { padding-top: 10px; }
+button.primary.big { padding: 8px 22px; font-size: 13.5px; }
+.doc h3 { font-size: 14px; margin: 20px 0 6px; }
+.doc h3:first-child { margin-top: 0; }
+.doc p, .doc li { color: var(--text); font-size: 13px; }
+.doc ul { padding-left: 20px; }
+.doc code { background: var(--panel2); border: 1px solid var(--line); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+.doc table.data { margin: 10px 0; }
+.note { border-left: 3px solid var(--accent); background: var(--panel2); padding: 8px 12px; border-radius: 0 7px 7px 0; margin: 10px 0; font-size: 12.5px; }
+.note.warn { border-left-color: var(--warn); }
+.math { background: var(--bg); border: 1px solid var(--line); border-radius: 7px; padding: 10px 12px; margin: 8px 0; overflow-x: auto; }
+
+/* -------------------------------------------------------------- selftest */
+#selftestOut { margin-top: 16px; }
+#selftestOut.hidden { display: none; }
+
+/* ----------------------------------------------------------------- print */
+@media print {
+  body { background: #fff; color: #000; }
+  header .hdr-actions, nav.tabs, .col.input, .drop, button, #selftestOut { display: none !important; }
+  .cols { grid-template-columns: 1fr; }
+  .card { box-shadow: none; border-color: #999; break-inside: avoid; }
+  .pane { display: block !important; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo">Zr</div>
+      <div>
+        <h1>锆石–熔体 REE 分配系数工具</h1>
+        <p class="sub">贴数据 · 点计算 · 拿结果 —— 全程离线，数据不上传</p>
+      </div>
+    </div>
+    <div class="hdr-actions">
+      <span class="pill" id="statusPill">就绪</span>
+      <button id="btnSelftest" title="运行内置数值自检">自检</button>
+      <button id="btnTheme" title="切换深浅主题">主题</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="ov">总览 · 流程</button>
+    <button class="tab" data-tab="m1">① 自由拟合</button>
+    <button class="tab" data-tab="m2">② 约束拟合</button>
+    <button class="tab" data-tab="m3">③ REE 温度计</button>
+    <button class="tab" data-tab="about">原理与校验</button>
+  </nav>
+
+  <main>
+    <!-- ==================================================== 总览·流程 -->
+    <section class="pane active" id="pane-ov">
+      <div class="card">
+        <h2>整个工具就五步</h2>
+        <div class="body">
+          <div class="flow">
+            <div class="stage"><div class="n">STEP 1</div><div class="t">准备数据</div>
+              <div class="d">Excel 复制粘贴，或拖入 .xlsx / .csv</div></div>
+            <div class="arw">→</div>
+            <div class="stage"><div class="n">STEP 2</div><div class="t">选算法</div>
+              <div class="d">① 自由拟合　② 约束拟合　③ 温度计</div></div>
+            <div class="arw">→</div>
+            <div class="stage"><div class="n">STEP 3</div><div class="t">点「计算」</div>
+              <div class="d">加权最小二乘拟合，自动给 ±1σ</div></div>
+            <div class="arw">→</div>
+            <div class="stage"><div class="n">STEP 4</div><div class="t">看结果</div>
+              <div class="d">参数值 ± 误差、拟合图、残差图、χ²/dof</div></div>
+            <div class="arw">→</div>
+            <div class="stage"><div class="n">STEP 5</div><div class="t">拿走</div>
+              <div class="d">复制文本 · CSV · JSON · PNG · 打印/PDF</div></div>
+          </div>
+          <p class="hint" style="margin-top:12px">数据只在你的浏览器里算；xlsx 也在这里解压解析，不经过任何服务器。</p>
+        </div>
+      </div>
+
+      <h3 class="sech">我该用哪个？</h3>
+      <div class="pick">
+        <div class="card pick-card">
+          <div class="body">
+            <div class="ptag">① 自由拟合</div>
+            <p class="pd">想从一批分配系数里<b>同时求出</b> D₀、r₀、E（任意矿物–熔体体系）。</p>
+            <div class="io"><b>输入</b><span>元素 / ri / Di / 1s　+　温度 T、压力 P</span></div>
+            <div class="io"><b>得到</b><span>D₀ ± 1σ　r₀ ± 1σ (Å)　E ± 1σ (GPa)</span></div>
+            <button class="primary" data-goto="m1">开始 →</button>
+          </div>
+        </div>
+        <div class="card pick-card">
+          <div class="body">
+            <div class="ptag">② 约束拟合（锆石）</div>
+            <p class="pd">锆石专用：E 与 r₀ 由 Q 约束绑定，只拟合 D₀、r₀。</p>
+            <div class="io"><b>输入</b><span>元素 / ri / Di / 1s　+　温度 T、Q（Q₁ 或 Q₂）</span></div>
+            <div class="io"><b>得到</b><span>D₀ ± 1σ　r₀ ± 1σ (Å)　E (GPa，由 Q 推出)</span></div>
+            <button class="primary" data-goto="m2">开始 →</button>
+          </div>
+        </div>
+        <div class="card pick-card">
+          <div class="body">
+            <div class="ptag">③ REE 温度计</div>
+            <p class="pd">已知锆石–熔体 REE 分配系数，<b>反演结晶温度</b>。可一次算多个样品。</p>
+            <div class="io"><b>输入</b><span>ri 一列　+　每个样品一列 D（表头写样品名）</span></div>
+            <div class="io"><b>得到</b><span>每个样品的 T ± 1σ（K 与 °C）、χ²/dof、散点+拟合曲线图</span></div>
+            <button class="primary" data-goto="m3">开始 →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>三步上手</h2>
+        <div class="body">
+          <ol class="steps">
+            <li>点上面任意一个<b>「开始 →」</b>（或在顶部切换标签页）。</li>
+            <li>已自动载入示例数据并算好结果 —— 想用自己的数据，就把表格<b>粘贴</b>进左侧输入框，或直接<b>拖入 xlsx</b>。</li>
+            <li>结果与图会立刻刷新；右上角可<b>复制结果</b>、导出 CSV / JSON / PNG，或打印成 PDF。</li>
+          </ol>
+          <p class="hint">表头能自动识别（Element / ri / Di / 1s / T / P）；认错了可以展开左侧「高级设置」手动指定列。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================== ① 自由拟合 -->
+    <section class="pane" id="pane-m1">
+      <div class="strip">
+        <div class="in"><b>你要输入</b><span>表格：元素 · ri (Å) · Di · 1s（可从 Excel 粘贴）</span><span>温度 T (°C)、压力 P (GPa)</span></div>
+        <div class="sep">→</div>
+        <div class="out"><b>你将得到</b><span>D₀ ± 1σ、r₀ ± 1σ (Å)、E ± 1σ (GPa)</span><span>拟合图 + 残差图 + χ²/dof、R²</span></div>
+      </div>
+      <div class="cols">
+        <div class="col input">
+          <div class="card">
+            <h2>1 · 输入数据</h2>
+            <div class="body">
+              <div class="row between">
+                <div class="row">
+                  <button class="tiny" id="m1_demo1">示例：Burnham 2012</button>
+                  <button class="tiny" id="m1_demo2">示例：合成数据</button>
+                </div>
+                <button class="tiny" id="m1_clear">清空</button>
+              </div>
+              <div class="drop" id="m1_drop">拖入 .xlsx / .csv / .txt，或点击选择<input type="file" id="m1_file" accept=".xlsx,.csv,.tsv,.txt" hidden></div>
+              <textarea id="m1_data" spellcheck="false" placeholder="Element&#9;ri&#9;Di&#9;1s&#10;La&#9;1.160&#9;0.0015&#9;0.0014"></textarea>
+              <div class="row" style="margin-top:8px">
+                <button class="tiny" id="m1_fillri">只有元素名？补全 ri</button>
+              </div>
+              <ul class="msgs" id="m1_msgs"></ul>
+            </div>
+            <div class="body">
+              <details class="adv">
+                <summary>高级设置（列映射 / 误差含义 / 从表格读 T·P）</summary>
+                <div class="advbody">
+                  <div class="grid3">
+                    <div><label class="f">元素列</label><select id="m1_mapEl"></select></div>
+                    <div><label class="f">离子半径 ri (Å)</label><select id="m1_mapRi"></select></div>
+                    <div><label class="f">分配系数 D</label><select id="m1_mapDi"></select></div>
+                  </div>
+                  <div class="grid2" style="margin-top:10px">
+                    <div><label class="f">误差列 1σ</label><select id="m1_mapS"></select></div>
+                    <div><label class="f">误差含义</label><select id="m1_errmode">
+                      <option value="abs">绝对 1σ（原脚本默认）</option>
+                      <option value="pct">相对百分数 %</option>
+                      <option value="none">不加权（σ=1）</option>
+                    </select></div>
+                  </div>
+                  <div class="row" style="margin-top:10px">
+                    <button class="tiny" id="m1_readTP">从表格读 T / P</button>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </div>
+          <div class="card">
+            <h2>2 · 拟合条件</h2>
+            <div class="body">
+              <div class="grid3">
+                <div><label class="f">温度 T (°C)</label><input type="number" id="m1_T" value="1295"></div>
+                <div><label class="f">压力 P (GPa)</label><input type="number" id="m1_P" value="0" step="0.5"></div>
+                <div><label class="f">误差标度</label><select id="m1_abs">
+                  <option value="abs1">绝对 1σ（原脚本）</option>
+                  <option value="scaled">按 χ² 缩放</option>
+                </select></div>
+              </div>
+              <div class="row" style="margin-top:12px">
+                <button class="primary big" id="m1_calc">计算</button>
+                <span class="pill" id="m1_badge">—</span>
+              </div>
+              <p class="hint">P 不参与计算，只作图注（与原脚本一致）。<code>absolute_sigma</code> 含义见「原理与校验」。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="card">
+            <h2>3 · 结果</h2>
+            <div class="body"><div class="bigvals" id="m1_bigvals"></div></div>
+            <div class="body">
+              <div class="row between">
+                <span class="hint">格式化结果（可直接贴进论文 / 表格）</span>
+                <span class="row">
+                  <button class="tiny" id="m1_copy">复制</button>
+                  <button class="tiny" id="m1_csv">CSV</button>
+                  <button class="tiny" id="m1_json">JSON</button>
+                  <button class="tiny" id="m1_png">PNG</button>
+                  <button class="tiny" id="m1_print">打印</button>
+                </span>
+              </div>
+              <pre class="report" id="m1_report">等待计算…</pre>
+            </div>
+            <div class="body">
+              <details class="adv">
+                <summary>详细统计量与逐点数据</summary>
+                <div class="advbody scroll tall" id="m1_stats"></div>
+              </details>
+            </div>
+          </div>
+          <div class="card">
+            <h2>4 · 图</h2>
+            <div class="chartwrap"><canvas id="m1_chart" data-h="420"></canvas></div>
+            <div class="chartwrap" style="padding-top:0"><canvas id="m1_resid" data-h="180"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================== ② 约束拟合 -->
+    <section class="pane" id="pane-m2">
+      <div class="strip">
+        <div class="in"><b>你要输入</b><span>表格：元素 · ri (Å) · Di · 1s</span><span>温度 T (°C)、约束常数 Q</span></div>
+        <div class="sep">→</div>
+        <div class="out"><b>你将得到</b><span>D₀ ± 1σ、r₀ ± 1σ (Å)、E (GPa)</span><span>拟合图 + 残差图 + χ²/dof、R²</span></div>
+      </div>
+      <div class="cols">
+        <div class="col input">
+          <div class="card">
+            <h2>1 · 输入数据</h2>
+            <div class="body">
+              <div class="row between">
+                <button class="tiny" id="m2_demo1">示例：Burnham 2012</button>
+                <button class="tiny" id="m2_clear">清空</button>
+              </div>
+              <div class="drop" id="m2_drop">拖入 .xlsx / .csv / .txt，或点击选择<input type="file" id="m2_file" accept=".xlsx,.csv,.tsv,.txt" hidden></div>
+              <textarea id="m2_data" spellcheck="false" placeholder="Element&#9;ri&#9;Di&#9;1s"></textarea>
+              <div class="row" style="margin-top:8px">
+                <button class="tiny" id="m2_fillri">只有元素名？补全 ri</button>
+              </div>
+              <ul class="msgs" id="m2_msgs"></ul>
+            </div>
+            <div class="body">
+              <details class="adv">
+                <summary>高级设置（列映射 / 误差含义 / 从表格读 T·P）</summary>
+                <div class="advbody">
+                  <div class="grid3">
+                    <div><label class="f">元素列</label><select id="m2_mapEl"></select></div>
+                    <div><label class="f">离子半径 ri (Å)</label><select id="m2_mapRi"></select></div>
+                    <div><label class="f">分配系数 D</label><select id="m2_mapDi"></select></div>
+                  </div>
+                  <div class="grid2" style="margin-top:10px">
+                    <div><label class="f">误差列 1σ</label><select id="m2_mapS"></select></div>
+                    <div><label class="f">误差含义</label><select id="m2_errmode">
+                      <option value="abs">绝对 1σ（原脚本默认）</option>
+                      <option value="pct">相对百分数 %</option>
+                      <option value="none">不加权（σ=1）</option>
+                    </select></div>
+                  </div>
+                  <div class="row" style="margin-top:10px">
+                    <button class="tiny" id="m2_readTP">从表格读 T / P</button>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </div>
+          <div class="card">
+            <h2>2 · 约束条件</h2>
+            <div class="body">
+              <div class="grid3">
+                <div><label class="f">温度 T (°C)</label><input type="number" id="m2_T" value="1295"></div>
+                <div><label class="f">约束常数 Q</label><select id="m2_Q">
+                  <option value="6489">Q₁ = 6489</option>
+                  <option value="7827">Q₂ = 7827</option>
+                </select></div>
+                <div><label class="f">压力 P (GPa，图注)</label><input type="number" id="m2_P" value="0" step="0.5"></div>
+              </div>
+              <div class="row" style="margin-top:12px">
+                <button class="primary big" id="m2_calc">计算</button>
+                <span class="pill" id="m2_badge">—</span>
+              </div>
+              <details class="adv">
+                <summary>高级设置（误差标度）</summary>
+                <div class="advbody">
+                  <label class="f">误差标度</label><select id="m2_abs">
+                    <option value="abs1">绝对 1σ（原脚本）</option>
+                    <option value="scaled">按 χ² 缩放</option>
+                  </select>
+                </div>
+              </details>
+              <p class="hint">约束把 E 与 r₀ 绑定：<code>E = Q/(1.38+r₀)³</code>，待求参数只剩 D₀、r₀。</p>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card">
+            <h2>3 · 结果</h2>
+            <div class="body"><div class="bigvals" id="m2_bigvals"></div></div>
+            <div class="body">
+              <div class="row between">
+                <span class="hint">格式化结果</span>
+                <span class="row">
+                  <button class="tiny" id="m2_copy">复制</button>
+                  <button class="tiny" id="m2_csv">CSV</button>
+                  <button class="tiny" id="m2_json">JSON</button>
+                  <button class="tiny" id="m2_png">PNG</button>
+                  <button class="tiny" id="m2_print">打印</button>
+                </span>
+              </div>
+              <pre class="report" id="m2_report">等待计算…</pre>
+            </div>
+            <div class="body">
+              <details class="adv">
+                <summary>详细统计量与逐点数据</summary>
+                <div class="advbody scroll tall" id="m2_stats"></div>
+              </details>
+            </div>
+          </div>
+          <div class="card">
+            <h2>4 · 图</h2>
+            <div class="chartwrap"><canvas id="m2_chart" data-h="420"></canvas></div>
+            <div class="chartwrap" style="padding-top:0"><canvas id="m2_resid" data-h="180"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================== ③ 温度计 -->
+    <section class="pane" id="pane-m3">
+      <div class="strip">
+        <div class="in"><b>你要输入</b><span>ri 一列 + 每个样品一列 D(Zircon/Melt)</span><span>模型参数：Q、r₀、D₀(T) 关系</span></div>
+        <div class="sep">→</div>
+        <div class="out"><b>你将得到</b><span>每个样品的 T ± 1σ（K / °C）</span><span>散点+拟合曲线图、逐点偏差、χ²/dof</span></div>
+      </div>
+      <div class="cols">
+        <div class="col input">
+          <div class="card">
+            <h2>1 · 输入数据</h2>
+            <div class="body">
+              <div class="row between">
+                <button class="tiny" id="m3_demo1">示例：Partition_coefficents_data</button>
+                <button class="tiny" id="m3_clear">清空</button>
+              </div>
+              <div class="drop" id="m3_drop">拖入 .xlsx / .csv / .txt，或点击选择<input type="file" id="m3_file" accept=".xlsx,.csv,.tsv,.txt" hidden></div>
+              <textarea id="m3_data" spellcheck="false" placeholder="Radii&#9;D(Sample 1)&#9;D(Sample 2)&#10;1.160&#9;0.0103&#9;0.1187"></textarea>
+              <div class="row" style="margin-top:8px">
+                <button class="tiny" id="m3_fillri">表头是元素名？用 Shannon 半径</button>
+              </div>
+              <ul class="msgs" id="m3_msgs"></ul>
+            </div>
+            <div class="body">
+              <details class="adv">
+                <summary>高级设置（半径列 / 样品列）</summary>
+                <div class="advbody">
+                  <div class="grid2">
+                    <div><label class="f">半径列</label><select id="m3_mapRi"></select></div>
+                    <div><label class="f">识别到的样品列</label><span class="hint" id="m3_samples">—</span></div>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </div>
+          <div class="card">
+            <h2>2 · 温度计模型</h2>
+            <div class="body">
+              <div class="grid2">
+                <div><label class="f">约束常数 Q</label><select id="m3_Q">
+                  <option value="6489">Q₁ = 6489</option>
+                  <option value="7827">Q₂ = 7827</option>
+                </select></div>
+                <div><label class="f">晶格位 r₀ (Å)</label><select id="m3_r0">
+                  <option value="0.93">0.93</option>
+                  <option value="0.95">0.95</option>
+                </select></div>
+              </div>
+              <div style="margin-top:10px">
+                <label class="f">D₀(T) 关系</label><select id="m3_d0">
+                  <option value="streicher2023">Streicher et al. (2022/2023)</option>
+                  <option value="rubatto2007">Rubatto &amp; Hermann (2007)</option>
+                </select>
+              </div>
+              <div class="row" style="margin-top:12px">
+                <button class="primary big" id="m3_calc">计算</button>
+                <span class="pill" id="m3_badge">—</span>
+              </div>
+              <details class="adv">
+                <summary>高级设置（误差标度）</summary>
+                <div class="advbody">
+                  <label class="f">误差标度</label><select id="m3_abs">
+                    <option value="scaled">按 χ² 缩放（原脚本默认）</option>
+                    <option value="abs1">绝对 1σ</option>
+                  </select>
+                </div>
+              </details>
+              <p class="hint">±1σ 只反映数据点分散度，不等于真实地质不确定度（详见「原理与校验」）。</p>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card">
+            <h2>3 · 结果（逐样品结晶温度）</h2>
+            <div class="body">
+              <div class="row between">
+                <span class="hint">格式化结果</span>
+                <span class="row">
+                  <button class="tiny" id="m3_copy">复制</button>
+                  <button class="tiny" id="m3_csv">CSV</button>
+                  <button class="tiny" id="m3_json">JSON</button>
+                  <button class="tiny" id="m3_png">PNG</button>
+                  <button class="tiny" id="m3_print">打印</button>
+                </span>
+              </div>
+              <pre class="report" id="m3_report">等待计算…</pre>
+            </div>
+            <div class="body">
+              <details class="adv">
+                <summary>详细统计量与逐点数据</summary>
+                <div class="advbody scroll tall" id="m3_stats"></div>
+              </details>
+            </div>
+          </div>
+          <div class="card">
+            <h2>4 · 图</h2>
+            <div class="chartwrap"><canvas id="m3_chart" data-h="420"></canvas></div>
+            <div class="chartwrap" style="padding-top:0"><canvas id="m3_resid" data-h="180"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== 原理 -->
+    <section class="pane" id="pane-about">
+      <div class="card doc"><div class="body">
+        <h3>三个模块分别对应仓库里的哪个脚本</h3>
+        <table class="data">
+          <thead><tr><th>模块</th><th>原脚本</th><th>待求参数</th><th>输入</th><th>输出</th></tr></thead>
+          <tbody>
+            <tr><td>① 自由拟合</td><td>3_Non_Linear_Regression.py</td><td>D₀, r₀, E</td><td>ri, Di, 1s, T, P</td><td>三个参数 ± 1σ + 图</td></tr>
+            <tr><td>② 约束拟合</td><td>4_Non_Linear_Regression_Constrained.py</td><td>D₀, r₀</td><td>ri, Di, 1s, T, Q</td><td>D₀, r₀ ± 1σ，E 由 Q 推出</td></tr>
+            <tr><td>③ REE 温度计</td><td>T_Calc_Application.py</td><td>T</td><td>ri + 各样品 D</td><td>每个样品的 T ± 1σ</td></tr>
+          </tbody>
+        </table>
+
+        <h3>模型与公式</h3>
+        <p>Brice (1975) 晶格应变模型，经 Blundy &amp; Wood (1994, 1997) 用于微量元素分配：</p>
+        <div class="math mono">D_i = D₀ · exp[ −4πE·N<sub>A</sub>/(R·T) · ( ½·r₀·(r_i−r₀)² + ⅓·(r_i−r₀)³ ) ]</div>
+        <p>原脚本把 −4πE·N<sub>A</sub>/(R·T) 合并为一个待拟合的形状参数，拟合完成后用下式换算回 GPa：</p>
+        <div class="math mono">E[GPa] = E_fit · R·T/N<sub>A</sub> · 10²¹　（R = 8.314472 J·K⁻¹·mol⁻¹，N<sub>A</sub> = 6.02214086×10²³）</div>
+        <p>约束版把 E 与 r₀ 绑定（E 由 Q 决定，位点半径取 1.38 Å）：</p>
+        <div class="math mono">E = Q / ((1.38 + r₀)·10⁻¹⁰)³ / 10⁹　[GPa]，　Q₁ = 6489×10⁻²¹ J，Q₂ = 7827×10⁻²¹ J</div>
+        <p>温度计则把 D₀ 写成温度的显函数，只留下 T 一个未知量：</p>
+        <div class="math mono">D_i = exp(A/T + B) · exp[ (k/T)·( ½·r₀·(r_i−r₀)² + ⅓·(r_i−r₀)³ ) / (1.38+r₀)³ ]，　k = −4πN<sub>A</sub>Q/R</div>
+
+        <h3>求解器：与原脚本的差别</h3>
+        <p>原脚本调用 <code>scipy.optimize.curve_fit</code>，且把迭代上限写成 <code>maxfev=50</code>。本工具改为自研的有界 Levenberg–Marquardt + 高斯-牛顿抛光，收敛判据不用梯度范数（本问题 JᵀJ 量级跨度极大，梯度范数不是可靠判据），而是直接验证最优性：在 ±1×10⁻⁸ 相对窗口内逐参数扰动，找不到更低的加权 SSR 即判定收敛。</p>
+        <div class="note">实测（示例数据，见 <code>webgui/test_math.js</code>，77 项对照全部通过）：本工具解与 scipy 紧容差最优解的最大相对偏差为 <b>6.3×10⁻¹⁰</b>；并且本工具解的加权 SSR <b>更低</b>（7.14511214444633×10⁻¹ 对 7.14511214444635×10⁻¹），即已到双精度噪声底。原脚本默认设置（maxfev=50）的解与真最优解相差约 2×10⁻⁶ 相对 —— 在原脚本输出的 2–3 位小数上不可见，但说明它没有跑透。</div>
+        <p>浏览器内的自检（本页底部「运行」或地址栏加 <code>#selftest</code>）会核对 11 个硬编码参考值、正演–反演闭合、5 个标签页切换、6 张图表是否真的绘制，共 15 项。</p>
+
+        <h3>统计量怎么读</h3>
+        <ul>
+          <li><b>χ²/dof</b> = Σ[(D_obs − D_calc)/σ]² / 自由度：若 1σ 是真实误差，该值应接近 1；远大于 1 说明误差被低估或模型不适合。</li>
+          <li><b>RMSWD</b>（加权残差均方根）= √(χ²/N)：同样应接近 1，更直观。</li>
+          <li><b>R²(log₁₀D)</b>、<b>RMS(log₁₀D)</b>：在对数域（地球化学常规轴）评价拟合优劣。</li>
+          <li>标准误取 <code>pcov = (JᵀJ)⁻¹</code> 对角线的平方根；误差标度选「按 χ² 缩放」时再乘 χ²/dof（即 scipy 的 <code>absolute_sigma=False</code>）。</li>
+        </ul>
+
+        <h3>数据格式</h3>
+        <p>① ②（可直接从 Excel 复制粘贴，或拖入 .xlsx / .csv）：</p>
+        <pre class="report">Element    ri      Di      1s
+Sc         0.870   0.9400  0.5700
+La         1.160   0.0015  0.0014
+...（ri 缺省时可按元素名自动补全 Shannon VIII 半径）</pre>
+        <p>③（第一列半径，其后每列一个样品）：</p>
+        <pre class="report">Radii   D(Sample 1)   D(Sample 2)
+1.160   0.0103        0.1187
+1.143   0.7308        0.8729
+...</pre>
+
+        <h3>已知局限</h3>
+        <ul>
+          <li>压力 P 在原模型里不参与计算，仅作为图上标注；这与原脚本一致。</li>
+          <li>温度计反演对 D 的误差结构敏感：原脚本不提供 σ，误差标度默认按 χ² 缩放，得到的 ±1σ 只反映「点分散度」，不是真实的地质不确定度。</li>
+          <li>若某样品的数据点过少（&lt; 4）或半径分布过窄，拟合会触及参数边界，界面会给出警告。</li>
+          <li>只读取 xlsx 的第一个工作表；旧版 .xls 不支持，请另存为 .xlsx 或 .csv。</li>
+        </ul>
+
+        <h3>出处</h3>
+        <p>算法与示例数据来自 Streicher, L.B., van Westrenen, W., Hanchar, J.M., Brouwer, F.M. (2023) <i>GCA</i> 346, 54–64（doi:10.1016/j.gca.2023.01.030）配套代码，原作者 Linus Streicher（VU Amsterdam）。示例数据取自 Burnham &amp; Berry (2012) <i>GCA</i> 95, 196–212。</p>
+      </div></div>
+      <div class="card" id="selftestCard" style="margin-top:14px">
+        <h2>内置自检 <button class="tiny" id="btnSelftest2">运行</button></h2>
+        <div class="body"><div id="selftestOut" class="mono" style="font-size:12px;color:var(--muted)">尚未运行。也可在地址栏后加 <code>#selftest</code> 自动运行。</div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>/* 由 webgui/make_data.py 自动生成，请勿手工编辑 */
+const DEMO_LATTICE = {
+  name: 'Burnham & Berry (2012) 实验样品',
+  source: 'Non_Linear_Fit_Code/2_Lattice_Strain_Data.xlsx',
+  T_C: 1295.0, P_GPa: 0.000101325,
+  rows: [{"el": "Sc", "ri": 0.87, "di": 0.94, "s1": 0.57}, {"el": "La", "ri": 1.16, "di": 0.0015, "s1": 0.0014}, {"el": "Pr", "ri": 1.126, "di": 0.0166, "s1": 0.0149}, {"el": "Nd", "ri": 1.109, "di": 0.044, "s1": 0.037}, {"el": "Sm", "ri": 1.079, "di": 0.183, "s1": 0.137}, {"el": "Gd", "ri": 1.053, "di": 0.531, "s1": 0.345}, {"el": "Tb", "ri": 1.04, "di": 0.866, "s1": 0.523}, {"el": "Dy", "ri": 1.027, "di": 1.28, "s1": 0.73}, {"el": "Ho", "ri": 1.015, "di": 1.8, "s1": 0.95}, {"el": "Er", "ri": 1.004, "di": 2.32, "s1": 1.17}, {"el": "Tm", "ri": 0.994, "di": 3.03, "s1": 1.46}, {"el": "Yb", "ri": 0.985, "di": 3.79, "s1": 1.83}, {"el": "Lu", "ri": 0.977, "di": 3.75, "s1": 1.69}]
+};
+const DEMO_PARTITION = {
+  name: '示例分配系数数据',
+  source: 'T_Calc_D(Zircon-melt)/Partition_coefficents_data.xlsx',
+  radii: [1.16, 1.143, 1.126, 1.109, 1.079, 1.066, 1.053, 1.04, 1.027, 1.015, 1.004, 0.994, 0.985, 0.977],
+  columns: {"D(Sample 1)": [0.0103, 0.7308, 0.0442, 0.171, 1.86, 0.29, 11.8, 32.6, 73.7, 139.0, 231.0, 347.0, 542.0, 640.0], "D(Sample 2)": [0.1187, 0.8729, 0.3674, 0.79, 2.76, 2.3, 13.8, 36.8, 80.8, 168.0, 286.0, 427.0, 574.0, 857.0]},
+};
+const DEMO_SYNTH = {
+  name: '闭合测试数据（10%% 噪声，真值已知）',
+  T_C: 1000.0,
+  truth: {"D0": 2.75, "r0": 0.941, "E_GPa": 580.0},
+  rows: [{"el": "X0", "ri": 0.87, "di": 0.8749966775068495, "s1": 0.10807147494213128}, {"el": "X1", "ri": 1.16, "di": 6.512999808605939e-05, "s1": 5.562815147251912e-06}, {"el": "X2", "ri": 1.143, "di": 0.00030550448224514037, "s1": 3.071866474583243e-05}, {"el": "X3", "ri": 1.126, "di": 0.0014194533953388038, "s1": 0.0001443820207253227}, {"el": "X4", "ri": 1.109, "di": 0.005664102607468467, "s1": 0.0005799578246464706}, {"el": "X5", "ri": 1.079, "di": 0.04696519622213389, "s1": 0.004656421119981358}, {"el": "X6", "ri": 1.066, "di": 0.09917261913836752, "s1": 0.009959689789147479}, {"el": "X7", "ri": 1.053, "di": 0.20176101215458225, "s1": 0.01959718110839161}, {"el": "X8", "ri": 1.04, "di": 0.27882538772414495, "s1": 0.035537501653803615}, {"el": "X9", "ri": 1.027, "di": 0.6210412201575315, "s1": 0.05949999529064714}, {"el": "X10", "ri": 1.015, "di": 0.9020133176669195, "s1": 0.08934029277743062}, {"el": "X11", "ri": 1.004, "di": 1.1962580872531403, "s1": 0.12247419235144515}, {"el": "X12", "ri": 0.994, "di": 1.6617867090882503, "s1": 0.15573991948376661}, {"el": "X13", "ri": 0.985, "di": 2.0624488448931517, "s1": 0.18628987974768696}, {"el": "X14", "ri": 0.977, "di": 2.078217009085113, "s1": 0.21219091876876567}]
+};
+const R_SHANNON_VIII = {
+  source: 'Shannon (1976) 有效离子半径, 8 次配位',
+  radii: {"Sc": 0.87, "Y": 1.019, "La": 1.16, "Ce": 1.143, "Pr": 1.126, "Nd": 1.109, "Pm": 1.093, "Sm": 1.079, "Eu": 1.066, "Gd": 1.053, "Tb": 1.04, "Dy": 1.027, "Ho": 1.015, "Er": 1.004, "Tm": 0.994, "Yb": 0.985, "Lu": 0.977}
+};
+const ELEMENT_ORDER = ["Sc", "Y", "La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", "Lu"];
+</script>
+<script>/* ============================================================================
+ * math.js -- 数值核心 (零依赖，可在浏览器与 Node 中运行)
+ *
+ * 移植自仓库原作者 Linus Streicher (VU Amsterdam) 的三个脚本：
+ *   3_Non_Linear_Regression.py             -> ZR.fitFree
+ *   4_Non_Linear_Regression_Constrained.py -> ZR.fitConstrained
+ *   T_Calc_D(Zircon-melt)/T_Calc_Application.py -> ZR.fitThermo
+ *
+ * 公式均按原文逐字照抄（见每个函数上的注释），只把固定常数提成参数。
+ * 与原脚本的唯一实质差别：原脚本用 scipy.optimize.curve_fit 且有 maxfev=50 的
+ * 迭代上限，本文件改为自研的有界 Levenberg-Marquardt + 高斯-牛顿抛光，
+ * 收敛判据基于梯度范数（详见 fit()）。数值结果与 scipy 紧容差最优解一致。
+ * ==========================================================================*/
+(function (global) {
+  'use strict';
+
+  var VERSION = '1.0.0';
+
+  /* ---------------------------------------------------------------- 常数 */
+  var NA = 6.02214086e23;   // 1/mol      (原脚本 N_a)
+  var RGAS = 8.314472;      // J/(K*mol)  (原脚本 R)
+  var RSITE = 1.38;         // Å          原脚本中的 (1.38 + r0) 常数
+
+  /* ------------------------------------------------------- 小线性代数工具 */
+  /** 高斯-约当求逆，奇异返回 null。A 为行优先的普通数组。 */
+  function matInv(Ain, n) {
+    var A = new Float64Array(n * 2 * n), i, j, k;
+    for (i = 0; i < n; i++) {
+      for (j = 0; j < n; j++) A[i * 2 * n + j] = Ain[i * n + j];
+      A[i * 2 * n + n + i] = 1;
+    }
+    for (i = 0; i < n; i++) {
+      var piv = i, best = Math.abs(A[i * 2 * n + i]);
+      for (k = i + 1; k < n; k++) {
+        var v = Math.abs(A[k * 2 * n + i]);
+        if (v > best) { best = v; piv = k; }
+      }
+      if (!(best > 0) || !isFinite(best)) return null;
+      if (piv !== i) {
+        for (j = 0; j < 2 * n; j++) {
+          var t = A[i * 2 * n + j]; A[i * 2 * n + j] = A[piv * 2 * n + j]; A[piv * 2 * n + j] = t;
+        }
+      }
+      var d = A[i * 2 * n + i];
+      for (j = 0; j < 2 * n; j++) A[i * 2 * n + j] /= d;
+      for (k = 0; k < n; k++) {
+        if (k === i) continue;
+        var f = A[k * 2 * n + i];
+        if (f === 0) continue;
+        for (j = 0; j < 2 * n; j++) A[k * 2 * n + j] -= f * A[i * 2 * n + j];
+      }
+    }
+    var out = new Float64Array(n * n);
+    for (i = 0; i < n; i++) for (j = 0; j < n; j++) out[i * n + j] = A[i * 2 * n + n + j];
+    return out;
+  }
+
+  /** 解 A x = b (A: n×n 行优先, b: 长度 n)，返回 x 或 null */
+  function matSolve(A, b, n) {
+    var M = new Float64Array(n * (n + 1)), i, j, k;
+    for (i = 0; i < n; i++) {
+      for (j = 0; j < n; j++) M[i * (n + 1) + j] = A[i * n + j];
+      M[i * (n + 1) + n] = b[i];
+    }
+    for (i = 0; i < n; i++) {
+      var piv = i, best = Math.abs(M[i * (n + 1) + i]);
+      for (k = i + 1; k < n; k++) {
+        var v = Math.abs(M[k * (n + 1) + i]);
+        if (v > best) { best = v; piv = k; }
+      }
+      if (!(best > 0) || !isFinite(best)) return null;
+      if (piv !== i) {
+        for (j = 0; j <= n; j++) {
+          var t = M[i * (n + 1) + j]; M[i * (n + 1) + j] = M[piv * (n + 1) + j]; M[piv * (n + 1) + j] = t;
+        }
+      }
+      for (k = i + 1; k < n; k++) {
+        var f = M[k * (n + 1) + i] / M[i * (n + 1) + i];
+        if (f === 0) continue;
+        for (j = i; j <= n; j++) M[k * (n + 1) + j] -= f * M[i * (n + 1) + j];
+      }
+    }
+    var x = new Float64Array(n);
+    for (i = n - 1; i >= 0; i--) {
+      var s = M[i * (n + 1) + n];
+      for (j = i + 1; j < n; j++) s -= M[i * (n + 1) + j] * x[j];
+      x[i] = s / M[i * (n + 1) + i];
+      if (!isFinite(x[i])) return null;
+    }
+    return x;
+  }
+
+  /* --------------------------------------------------------- 模型与导数 */
+  /** B(r, r0) = 0.5*r0*(r-r0)^2 + (1/3)*(r-r0)^3  —— 原文中反复出现的立方项 */
+  function bTerm(r, r0) {
+    var s = r - r0;
+    return 0.5 * r0 * s * s + (1 / 3) * s * s * s;
+  }
+  /** dB/dr0 = -0.5*s^2 - r0*s */
+  function bTermDr0(r, r0) {
+    var s = r - r0;
+    return -0.5 * s * s - r0 * s;
+  }
+
+  /* ---- 模型一：自由晶格应变拟合 (3_Non_Linear_Regression.py::model)
+     D_i = D0 * exp(-4π*E*(0.5*r0*(r_i-r0)^2 + (1/3)*(r_i-r0)^3))
+     参数 p = [D0, r0, E]（E 为无量纲形状参数，输出时乘以 E_Conv_Factor）   */
+  var MODEL_FREE = {
+    keys: ['D0', 'r0', 'E'],
+    labels: ['D\u2080', 'r\u2080', 'E'],
+    lo: [1e-12, 1e-6, 1e-12],
+    hi: [2000, 2, 1000],                    // 原脚本 bounds=((0,0,0),(2000,2,1000))
+    p0: [1, 1, 1],                          // scipy 在无 p0 时取 (1,1,1)（落在界内）
+    eval: function (r, p) {
+      return p[0] * Math.exp(-4 * Math.PI * p[2] * bTerm(r, p[1]));
+    },
+    jac: function (r, p) {                  // 返回 [df/dD0, df/dr0, df/dE]
+      var f = MODEL_FREE.eval(r, p), s = r - p[1];
+      return [f / p[0],
+              f * (-4 * Math.PI * p[2]) * bTermDr0(r, p[1]),
+              f * (-4 * Math.PI) * bTerm(r, p[1])];
+    }
+  };
+
+  /* ---- 模型二：约束拟合 (4_Non_Linear_Regression_Constrained.py::model)
+     参数 p = [D0, r0]，E 由 Q 约束定出：
+       indi_var = -4π*N_a*(Q*1e-21)/(R) * 1/T
+       D_i = D0 * exp( indi_var * B(r_i,r0) / (1.38+r0)^3 )
+     indiVar 作为固定量由外部传入（依赖 Q 与 T）                            */
+  function makeModelC1(indiVar) {
+    return {
+      keys: ['D0', 'r0'],
+      lo: [1e-12, 1e-6],
+      hi: [2000, 2],                        // 原脚本 bounds=((0,0),(2000,2))
+      p0: [1, 1],
+      indiVar: indiVar,
+      eval: function (r, p) {
+        return p[0] * Math.exp(indiVar * bTerm(r, p[1]) / Math.pow(RSITE + p[1], 3));
+      },
+      jac: function (r, p) {
+        var f = MODEL_C1_eval(r, p, indiVar);
+        var c = indiVar / Math.pow(RSITE + p[1], 3);
+        var dc = -3 * indiVar / Math.pow(RSITE + p[1], 4);
+        return [f / p[0], f * (dc * bTerm(r, p[1]) + c * bTermDr0(r, p[1]))];
+      }
+    };
+  }
+  function MODEL_C1_eval(r, p, indiVar) {
+    return p[0] * Math.exp(indiVar * bTerm(r, p[1]) / Math.pow(RSITE + p[1], 3));
+  }
+
+  /* ---- 模型三：REE 锆石-熔体温度计 (T_Calc_Application.py::model_constrainted)
+       T 为唯一待求参数；r0 固定；D0 随温度走 exp(A/T + Bc)
+       k = -4π*N_a*(Q*1e-21)/R / (1.38+r0)^3                                */
+  function makeModelThermo(k, r0, A, Bc) {
+    var keys = ['T'];
+    return {
+      keys: keys,
+      lo: [1e-3],
+      hi: [2000],                           // 原脚本 bounds=((0),(2000))
+      p0: [1000],                           // 原脚本 p0 默认 (1,) 亦能收敛；1000 K 更稳
+      k: k, r0: r0, A: A, Bc: Bc,
+      eval: function (r, p) {
+        var T = p[0];
+        return Math.exp(A / T + Bc) * Math.exp((k / T) * bTerm(r, r0));
+      },
+      jac: function (r, p) {
+        var T = p[0];
+        var f = Math.exp(A / T + Bc) * Math.exp((k / T) * bTerm(r, r0));
+        return [-f * (A + k * bTerm(r, r0)) / (T * T)];
+      }
+    };
+  }
+
+  /* ------------------------------------------------- 有界 Levenberg-Marquardt
+   * 最小化 SSR(p) = Σ [ (f(r_i;p) - y_i)/σ_i ]^2
+   * resid(p) -> 加权残差数组 (长度 m)
+   * jac(p)   -> m×n 加权雅可比（解析式）
+   * 返回 {p, pcov, err, ssr, dof, chi2red, iters, converged, boundHit, gnorm}
+   * ------------------------------------------------------------------------ */
+  function fit(residFn, jacFn, p0, lo, hi, opts) {
+    opts = opts || {};
+    var maxIter = opts.maxIter || 300;
+    var n = p0.length;
+    var m = residFn(p0).length;
+    var i, j, k;
+
+    function SSR(pv) { var r = residFn(pv), s = 0; for (i = 0; i < r.length; i++) s += r[i] * r[i]; return s; }
+    function buildAJ(pv) {                    // A = JᵀJ (对称), g = Jᵀr
+      var r = residFn(pv), J = jacFn(pv);
+      var A = new Float64Array(n * n), g = new Float64Array(n);
+      for (i = 0; i < m; i++) {
+        var row = J[i];
+        for (j = 0; j < n; j++) {
+          var v = row[j];
+          g[j] += v * r[i];
+          for (k = j; k < n; k++) A[j * n + k] += v * row[k];
+        }
+      }
+      for (j = 0; j < n; j++) for (k = 0; k < j; k++) A[j * n + k] = A[k * n + j];
+      return { A: A, g: g, r: r };
+    }
+    function gradNorm(g) { var s = 0; for (j = 0; j < n; j++) s = Math.max(s, Math.abs(g[j])); return s; }
+    function clip(pv) {                       // 投影回可行域（留极小内边距）
+      var out = pv.slice();
+      for (j = 0; j < n; j++) {
+        var pad = 1e-12 * (hi[j] - lo[j]);
+        if (!(out[j] > lo[j] + pad)) out[j] = lo[j] + pad;
+        if (!(out[j] < hi[j] - pad)) out[j] = hi[j] - pad;
+      }
+      return out;
+    }
+    function stepFrom(st, lam) {
+      var A2 = st.A.slice();
+      for (j = 0; j < n; j++) A2[j * n + j] += lam * Math.max(st.A[j * n + j], 1e-300);
+      var neg = new Float64Array(n);
+      for (j = 0; j < n; j++) neg[j] = -st.g[j];
+      var d = matSolve(A2, neg, n);
+      if (!d) return null;
+      var pn = new Array(n);
+      for (j = 0; j < n; j++) pn[j] = st.p[j] + d[j];
+      if (!isFinite(pn[0])) return null;
+      return { p: clip(pn), raw: pn };
+    }
+
+    var p = p0.slice();
+    var ssr = SSR(p);
+    var st = { p: p, A: null, g: null };
+    var s0 = buildAJ(p); st.A = s0.A; st.g = s0.g;
+    var lam = 1e-3, iters = 0, converged = false, reason = 'maxIter';
+
+    for (iters = 1; iters <= maxIter; iters++) {
+      var gn = gradNorm(st.g);
+      if (gn <= 1e-14 * Math.max(1, ssr)) { converged = true; reason = 'gradient'; break; }
+      var accepted = false;
+      for (var inner = 0; inner < 40; inner++) {
+        var s = stepFrom(st, lam);
+        if (!s) { lam *= 10; if (lam > 1e16) break; continue; }
+        var ssrn = SSR(s.p);
+        if (ssrn < ssr) {
+          var moved = 0;
+          for (j = 0; j < n; j++) moved = Math.max(moved, Math.abs(s.p[j] - p[j]) / Math.max(Math.abs(p[j]), 1e-30));
+          p = s.p; ssr = ssrn;
+          var sn = buildAJ(p); st = { p: p, A: sn.A, g: sn.g };
+          lam = Math.max(lam / 3, 1e-15);
+          accepted = true;
+          if (moved < 1e-14) { reason = 'step'; }
+          break;
+        }
+        lam *= 10;
+        if (lam > 1e16) break;
+      }
+      if (!accepted) { reason = 'noDescent'; break; }
+      if (reason === 'step') { converged = true; break; }
+    }
+
+    /* --- 高斯-牛顿抛光（带回溯线搜索）：把最优点推到机器精度 --- */
+    for (var pol = 0; pol < 60; pol++) {
+      var gn2 = gradNorm(st.g);
+      if (gn2 <= 1e-14 * Math.max(1, ssr)) { converged = true; reason = 'gradient'; break; }
+      var neg2 = new Float64Array(n);
+      for (j = 0; j < n; j++) neg2[j] = -st.g[j];
+      var dd = matSolve(st.A, neg2, n);
+      if (!dd) break;
+      var okStep = false, alpha = 1, bestP = null, bestS = ssr;
+      for (var bt = 0; bt < 60; bt++) {
+        var pn2 = new Array(n);
+        for (j = 0; j < n; j++) pn2[j] = p[j] + alpha * dd[j];
+        pn2 = clip(pn2);
+        var ss2 = SSR(pn2);
+        if (ss2 < ssr) { okStep = true; bestP = pn2; bestS = ss2; break; }
+        alpha *= 0.5;
+      }
+      if (!okStep) break;
+      var moved2 = 0;
+      for (j = 0; j < n; j++) moved2 = Math.max(moved2, Math.abs(bestP[j] - p[j]) / Math.max(Math.abs(p[j]), 1e-30));
+      p = bestP; ssr = bestS;
+      var sn2 = buildAJ(p); st = { p: p, A: sn2.A, g: sn2.g };
+      if (moved2 < 1e-15) { converged = true; break; }
+    }
+
+    /* --- 协方差：pcov = inv(JᵀJ) *（absolute_sigma=False 时再乘 s²） --- */
+    var pcov = matInv(st.A, n), err = new Array(n).fill(NaN);
+    var dof = m - n, chi2red = NaN;
+    if (pcov) {
+      var scale = opts.absoluteSigma === false ? (ssr / Math.max(dof, 1)) : 1;
+      for (j = 0; j < n; j++) {
+        var v = pcov[j * n + j] * scale;
+        err[j] = v > 0 ? Math.sqrt(v) : NaN;
+      }
+    }
+    if (dof > 0) chi2red = ssr / dof;
+
+    /* --- 是否顶在参数边界（结果可能不可靠，需提示用户） --- */
+    var boundHit = false;
+    for (j = 0; j < n; j++) {
+      var pad2 = 1e-6 * (hi[j] - lo[j]);
+      if (p[j] <= lo[j] + pad2 || p[j] >= hi[j] - pad2) boundHit = true;
+    }
+
+    /* --- 最优性验证 ---
+     * 梯度范数在本问题里不是一个好判据：A = JᵀJ 的量级跨度极大（D0 方向可达 1e10 以上），
+     * 梯度降到 1e-8 时参数其实已经精确到 1e-13 相对。这里改为直接检验：
+     * 在 ±1e-8 相对窗口内逐参数单向扰动，能否找到比当前点更低（相对改进 > 1e-13）的 SSR。
+     * 找不到 => 已达双精度噪声底，结果可判为最优。                          */
+    var optWindow = 1e-8, maxImprove = 0;
+    for (j = 0; j < n; j++) {
+      for (var sg = -1; sg <= 1; sg += 2) {
+        for (var amp = 1e-11; amp <= optWindow * 1.0000001; amp *= 10) {
+          var pv = p.slice();
+          pv[j] = p[j] * (1 + sg * amp);
+          if (!(pv[j] > 0)) continue;
+          var s2 = SSR(clip(pv));
+          var imp = (ssr - s2) / Math.max(ssr, 1e-300);
+          if (imp > maxImprove) maxImprove = imp;
+        }
+      }
+    }
+    var optimalityVerified = maxImprove <= 1e-13;
+    if (optimalityVerified && !converged) { converged = true; reason = 'optimality'; }
+
+    return {
+      p: p, pcov: pcov, err: err, ssr: ssr, dof: dof, chi2red: chi2red,
+      iters: iters, converged: converged, reason: reason, boundHit: boundHit,
+      gnorm: gradNorm(st.g), optWindow: optWindow, maxImprove: maxImprove,
+      optimalityVerified: optimalityVerified
+    };
+  }
+
+  /* --------------------------------------------------------- 误差权重模式 */
+  /* mode: 'abs' = 1s 即绝对 1σ (原脚本默认)
+           'pct' = 1s 为相对百分数（原 README 提到的 1s%）
+           'none'= 不加权（σ_i = 1）                                        */
+  function makeSigma(mode, di, s1) {
+    var sig = new Float64Array(di.length), i, bad = 0;
+    for (i = 0; i < di.length; i++) {
+      var v = 1;
+      if (mode === 'abs') v = s1[i];
+      else if (mode === 'pct') v = Math.abs(di[i]) * s1[i] / 100;
+      if (!(isFinite(v) && v > 0)) { v = 1; bad++; }
+      sig[i] = v;
+    }
+    return { sigma: sig, degraded: bad, useWeights: mode !== 'none' };
+  }
+
+  /* ------------------------------------------------- 统计量（结果格式化用） */
+  function stats(r, y, pred) {
+    var i, m = y.length;
+    // 对数域 R²（地球化学常规作图轴为 logD）
+    var ly = [], lp = [], ok = 0;
+    for (i = 0; i < m; i++) {
+      if (y[i] > 0 && pred[i] > 0) { ly.push(Math.log10(y[i])); lp.push(Math.log10(pred[i])); ok++; }
+    }
+    var out = { n: m, r2_log: NaN, rms_log: NaN, maxResLog: NaN };
+    if (ok > 1) {
+      var mean = 0;
+      for (i = 0; i < ok; i++) mean += ly[i];
+      mean /= ok;
+      var sst = 0, sse = 0, mx = 0;
+      for (i = 0; i < ok; i++) {
+        sst += (ly[i] - mean) * (ly[i] - mean);
+        var e = lp[i] - ly[i];
+        sse += e * e;
+        mx = Math.max(mx, Math.abs(e));
+      }
+      out.r2_log = sst > 0 ? 1 - sse / sst : NaN;
+      out.rms_log = Math.sqrt(sse / ok);
+      out.maxResLog = mx;
+    }
+    return out;
+  }
+
+  /* ==================================================================
+   * 公开 API
+   * ================================================================== */
+
+  /**
+   * 模型一：自由晶格应变拟合
+   * opts = {ri:[], di:[], s1:[], T_C, P_GPa, errMode, absoluteSigma}
+   */
+  function fitFree(o) {
+    var ri = o.ri, di = o.di, s1 = o.s1 || [], n = ri.length;
+    var T_K = o.T_C + 273.15;
+    var sm = makeSigma(o.errMode || 'abs', di, s1);
+    var sig = sm.sigma;
+    var resid = function (p) {
+      var out = new Float64Array(n);
+      for (var i = 0; i < n; i++) out[i] = (MODEL_FREE.eval(ri[i], p) - di[i]) / sig[i];
+      return out;
+    };
+    var jac = function (p) {
+      var rows = [];
+      for (var i = 0; i < n; i++) {
+        var j = MODEL_FREE.jac(ri[i], p);
+        rows.push([j[0] / sig[i], j[1] / sig[i], j[2] / sig[i]]);
+      }
+      return rows;
+    };
+    var r = fit(resid, jac, MODEL_FREE.p0.slice(), MODEL_FREE.lo.slice(), MODEL_FREE.hi.slice(),
+                { absoluteSigma: o.absoluteSigma !== false });
+    // E_Conv_Factor = R*T/N_a*1e21  (J/Å³ -> GPa)
+    var conv = RGAS * T_K / NA * 1e21;
+    var pred = ri.map(function (x) { return MODEL_FREE.eval(x, r.p); });
+    return {
+      module: 'free', T_K: T_K, P_GPa: o.P_GPa, conv: conv,
+      D0: r.p[0], r0: r.p[1], Efit: r.p[2],
+      dD0: r.err[0], dr0: r.err[1], dEfit: r.err[2],
+      E_GPa: r.p[2] * conv, dE_GPa: r.err[2] * conv,
+      pred: pred, fit: r, sigmaMode: sm, stats: stats(r, di, pred)
+    };
+  }
+
+  /**
+   * 模型二：约束拟合（锆石专属，E 由 Q 定）
+   * opts = {ri, di, s1, T_C, Q, errMode, absoluteSigma}
+   */
+  function fitConstrained(o) {
+    var ri = o.ri, di = o.di, s1 = o.s1 || [], n = ri.length;
+    var T_K = o.T_C + 273.15;
+    var cc = o.Q * 1e-21;                            // J
+    var indiVar = (-4 * Math.PI * NA * cc) / RGAS * 1 / T_K;
+    var sm = makeSigma(o.errMode || 'abs', di, s1);
+    var sig = sm.sigma;
+    var model = makeModelC1(indiVar);
+    var resid = function (p) {
+      var out = new Float64Array(n);
+      for (var i = 0; i < n; i++) out[i] = (MODEL_C1_eval(ri[i], p, indiVar) - di[i]) / sig[i];
+      return out;
+    };
+    var jac = function (p) {
+      var rows = [];
+      for (var i = 0; i < n; i++) {
+        var j = model.jac(ri[i], p);
+        rows.push([j[0] / sig[i], j[1] / sig[i]]);
+      }
+      return rows;
+    };
+    var r = fit(resid, jac, model.p0.slice(), model.lo.slice(), model.hi.slice(),
+                { absoluteSigma: o.absoluteSigma !== false });
+    var D0 = r.p[0], r0 = r.p[1];
+    // E = Q / ((1.38+r0)*1e-10)^3 / 1e9  [GPa]
+    var E_GPa = (cc / Math.pow((RSITE + r0) * 1e-10, 3)) / 1e9;
+    // 原文的 2 阶泰勒误差传播
+    var t0 = r.err[1] * 1e-10;
+    var dE = Math.sqrt(Math.pow((-3 * cc / Math.pow((RSITE + r0) * 1e-10, 4)) * t0
+      + (6 * cc / Math.pow((RSITE + r0) * 1e-10, 5)) * t0 * t0, 2)) / 1e9;
+    var pred = ri.map(function (x) { return MODEL_C1_eval(x, r.p, indiVar); });
+    return {
+      module: 'constrained', T_K: T_K, Q: o.Q, indiVar: indiVar,
+      D0: D0, r0: r0, dD0: r.err[0], dr0: r.err[1],
+      E_GPa: E_GPa, dE_GPa: dE,
+      pred: pred, fit: r, sigmaMode: sm, stats: stats(r, di, pred)
+    };
+  }
+
+  /** D0(T) 关系的两组可选系数 */
+  var THERMO_D0 = {
+    streicher2023: { A: 13594, Bc: -7.1266, label: 'Streicher et al. (2022/2023)' },
+    rubatto2007: { A: 22420, Bc: -14.221, label: 'Rubatto & Hermann (2007)' }
+  };
+
+  /**
+   * 模型三：REE 锆石-熔体温度计（逐样品反演 T）
+   * opts = {radii:[], columns:{name:[D...]}, Q, r0, d0Model, absoluteSigma, errMode, sigmaCol}
+   */
+  function fitThermo(o) {
+    var radii = o.radii, n = radii.length, r0 = o.r0;
+    var cc = o.Q * 1e-21;
+    var k = (-4 * Math.PI * NA * cc) / RGAS / Math.pow(RSITE + r0, 3);
+    var d0 = THERMO_D0[o.d0Model || 'streicher2023'];
+    var model = makeModelThermo(k, r0, d0.A, d0.Bc);
+    var out = [];
+    Object.keys(o.columns).forEach(function (name) {
+      var ds = o.columns[name];
+      var sm = o.errMode === 'abs' && o.sigmaCol && o.sigmaCol[name]
+        ? makeSigma('abs', ds, o.sigmaCol[name])
+        : makeSigma('none', ds, []);
+      var sig = sm.sigma;
+      var resid = function (p) {
+        var a = new Float64Array(n);
+        for (var i = 0; i < n; i++) a[i] = (model.eval(radii[i], p) - ds[i]) / sig[i];
+        return a;
+      };
+      var jac = function (p) {
+        var rows = [];
+        for (var i = 0; i < n; i++) rows.push([model.jac(radii[i], p)[0] / sig[i]]);
+        return rows;
+      };
+      var r = fit(resid, jac, model.p0.slice(), model.lo.slice(), model.hi.slice(),
+                  { absoluteSigma: o.absoluteSigma === true });
+      var pred = radii.map(function (x) { return model.eval(x, r.p); });
+      out.push({
+        sample: name, T_K: r.p[0], dT_K: r.err[0], T_C: r.p[0] - 273.15,
+        pred: pred, fit: r, stats: stats(r, ds, pred)
+      });
+    });
+    return {
+      module: 'thermo', Q: o.Q, r0: r0, k: k, d0Model: o.d0Model || 'streicher2023',
+      d0Label: d0.label, A: d0.A, Bc: d0.Bc, samples: out
+    };
+  }
+
+  /* 前向模型：给定参数算 D(ri)，用于画曲线与闭合测试 */
+  function forwardFree(ri, D0, r0, Efit) { return ri.map(function (x) { return MODEL_FREE.eval(x, [D0, r0, Efit]); }); }
+  function forwardC1(ri, D0, r0, T_C, Q) {
+    var iv = (-4 * Math.PI * NA * (Q * 1e-21)) / RGAS / (T_C + 273.15);
+    return ri.map(function (x) { return MODEL_C1_eval(x, [D0, r0], iv); });
+  }
+  function forwardThermo(ri, T_K, r0, Q, d0Model) {
+    var cc = Q * 1e-21;
+    var kk = (-4 * Math.PI * NA * cc) / RGAS / Math.pow(RSITE + r0, 3);
+    var m = makeModelThermo(kk, r0, THERMO_D0[d0Model].A, THERMO_D0[d0Model].Bc);
+    return ri.map(function (x) { return m.eval(x, [T_K]); });
+  }
+
+  var API = {
+    VERSION: VERSION,
+    NA: NA, RGAS: RGAS, RSITE: RSITE,
+    bTerm: bTerm, bTermDr0: bTermDr0,
+    matInv: matInv, matSolve: matSolve,
+    MODEL_FREE: MODEL_FREE, makeModelC1: makeModelC1, makeModelThermo: makeModelThermo,
+    THERMO_D0: THERMO_D0,
+    fitFree: fitFree, fitConstrained: fitConstrained, fitThermo: fitThermo,
+    forwardFree: forwardFree, forwardC1: forwardC1, forwardThermo: forwardThermo,
+    stats: stats
+  };
+
+  if (typeof window !== 'undefined') window.ZR = API;
+  if (typeof module !== 'undefined' && module.exports) module.exports = API;
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>/* ============================================================================
+ * app.js -- 界面逻辑：数据输入 / 计算 / 格式化结果 / 输出
+ * 依赖：data.js (示例数据) + math.js (window.ZR)
+ * ==========================================================================*/
+(function () {
+  'use strict';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var ZR = window.ZR;
+  var TOOL = '锆石–熔体 REE 分配系数工具';
+  var VER = ZR.VERSION;
+
+  // 任何未捕获的脚本错误都显示在状态栏（方便用户反馈，也让无头测试能读到）
+  window.addEventListener('error', function (ev) {
+    var m = 'JS 错误: ' + ev.message + '  (行 ' + ev.lineno + ')';
+    document.title = m;
+    var el = document.getElementById('statusPill');
+    if (el) { el.textContent = m; el.className = 'pill err'; }
+    var so = document.getElementById('selftestOut');
+    if (so) so.setAttribute('data-jserror', m);
+  });
+
+  /* ==================================================================== 工具 */
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function fx(v, d) { return (v == null || !isFinite(v)) ? '—' : Number(v).toFixed(d); }
+  function sig(v, d) {
+    if (v == null || !isFinite(v)) return '—';
+    if (v === 0) return '0';
+    var a = Math.abs(v);
+    if (a >= 1e5 || a < 1e-3) return Number(v).toExponential(d);
+    return Number(v).toPrecision(d);
+  }
+  /** 有效数字对齐：把 value ± err 都按 err 的量级取位（科学记数法用于论文） */
+  function pm(value, err, unit) {
+    if (err == null || !isFinite(err) || err === 0) return sig(value, 6) + (unit ? ' ' + unit : '');
+    var exp = Math.floor(Math.log10(Math.abs(err)));
+    var dec = Math.max(0, Math.min(12, -exp + 1));
+    return value.toFixed(dec) + ' ± ' + err.toFixed(dec) + (unit ? ' ' + unit : '');
+  }
+  /** 压力有可能极小（如 0.000101325 GPa = 1 atm），按量级选格式 */
+  function fmtP(v) { return (Math.abs(v) < 0.01 && v !== 0) ? Number(v).toPrecision(3) : fx(v, 2); }
+  function numCell(s) {
+    if (s == null) return null;
+    var t = String(s).replace(/[\s\u00a0\u3000]/g, '');
+    if (t === '' || /^(na|nan|nd|n\.d\.|—|–|-|\?)$/i.test(t)) return null;
+    if (/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(t)) t = t.replace(/,/g, '');
+    var v = Number(t);
+    return isFinite(v) ? v : null;
+  }
+  function download(name, text, mime) {
+    var blob = new Blob([text], { type: mime || 'text/plain;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  function csvCell(v) {
+    var s = (v == null) ? '' : String(v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  function toCSV(rows) { return '\ufeff' + rows.map(function (r) { return r.map(csvCell).join(','); }).join('\r\n'); }
+  function stamp() {
+    var d = new Date(), p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  function setStatus(text, cls) {
+    var el = $('statusPill');
+    el.textContent = text;
+    el.className = 'pill' + (cls ? ' ' + cls : '');
+  }
+  function setBadge(pfx, text, cls) {
+    var el = $(pfx + '_badge');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'pill' + (cls ? ' ' + cls : '');
+  }
+
+  /* =========================================================== 表格解析 */
+  function parseDelimited(text) {
+    var lines = text.replace(/\r\n?/g, '\n').split('\n');
+    var head = null, delim = '\t';
+    for (var i = 0; i < lines.length && head === null; i++) {
+      if (lines[i].trim() !== '') head = lines[i];
+    }
+    if (head === null) return { rows: [] };
+    var nt = (head.match(/\t/g) || []).length;
+    var nc = (head.match(/,/g) || []).length;
+    var ns = (head.match(/;/g) || []).length;
+    if (nt >= nc && nt >= ns && nt > 0) delim = '\t';
+    else if (nc >= ns && nc > 0) delim = ',';
+    else if (ns > 0) delim = ';';
+    else delim = null;                                    // 空白分隔
+    var rows = [];
+    for (var k = 0; k < lines.length; k++) {
+      var ln = lines[k];
+      if (ln.trim() === '') continue;
+      var cells = delim === null ? ln.trim().split(/\s+/) : splitCSV(ln, delim);
+      rows.push(cells.map(function (c) { return c.trim(); }));
+    }
+    if (!rows.length) return { rows: [] };
+    // 首行是否表头：非数值单元格占比 >= 50% 且至少一个单元格命中已知关键词
+    var nonNum = rows[0].filter(function (c) { return c !== '' && numCell(c) === null; }).length;
+    var frac = rows[0].length ? nonNum / rows[0].length : 0;
+    var hasKV = rows[0].some(function (c) {
+      return Object.keys(KWR).some(function (r) { return KWR[r].test(c); });
+    });
+    var hasHeader = frac >= 0.5 && (hasKV || rows[0].every(function (c) { return numCell(c) === null; }));
+    var header = null, body = rows;
+    if (hasHeader) { header = rows[0]; body = rows.slice(1); }
+    var nCol = 0;
+    body.forEach(function (r) { nCol = Math.max(nCol, r.length); });
+    if (header) nCol = Math.max(nCol, header.length);
+    var colNames = [];
+    for (var c2 = 0; c2 < nCol; c2++) {
+      colNames.push((header && header[c2] != null && String(header[c2]).trim() !== '')
+        ? String(header[c2]).trim() : ('列' + (c2 + 1)));
+    }
+    return { header: header, colNames: colNames, rows: body, nCol: nCol };
+  }
+  function splitCSV(line, delim) {
+    if (delim === '\t' || delim === ';') return line.split(delim);
+    var out = [], cur = '', q = false;
+    for (var i = 0; i < line.length; i++) {
+      var ch = line[i];
+      if (q) {
+        if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+        else cur += ch;
+      } else if (ch === '"') q = true;
+      else if (ch === delim) { out.push(cur); cur = ''; }
+      else cur += ch;
+    }
+    out.push(cur);
+    return out;
+  }
+
+  /* ---------------------------------------------------------- xlsx 读取 */
+  function readU16(dv, p) { return dv.getUint16(p, true); }
+  function readU32(dv, p) { return dv.getUint32(p, true); }
+
+  function unzipEntries(u8) {
+    var dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+    var eocd = -1, lim = Math.max(0, u8.length - 66000);
+    for (var p = u8.length - 22; p >= lim; p--) {
+      if (u8[p] === 0x50 && u8[p + 1] === 0x4b && u8[p + 2] === 0x05 && u8[p + 3] === 0x06) { eocd = p; break; }
+    }
+    if (eocd < 0) throw new Error('不是有效的 xlsx（zip）文件');
+    var nEnt = readU16(dv, eocd + 10), off = readU32(dv, eocd + 16);
+    var out = {};
+    for (var i = 0; i < nEnt; i++) {
+      if (readU32(dv, off) !== 0x02014b50) break;
+      var method = readU16(dv, off + 10);
+      var csize = readU32(dv, off + 20);
+      var nameLen = readU16(dv, off + 28), extraLen = readU16(dv, off + 30), cmtLen = readU16(dv, off + 32);
+      var lho = readU32(dv, off + 42);
+      var name = '';
+      for (var j = 0; j < nameLen; j++) name += String.fromCharCode(u8[off + 46 + j]);
+      var nl2 = readU16(dv, lho + 26), el2 = readU16(dv, lho + 28);
+      var start = lho + 30 + nl2 + el2;
+      out[name] = { method: method, data: u8.subarray(start, start + csize) };
+      off += 46 + nameLen + extraLen + cmtLen;
+    }
+    return out;
+  }
+  function inflateRaw(bytes) {
+    if (typeof DecompressionStream === 'undefined') {
+      return Promise.reject(new Error('当前浏览器不支持解压（需 Chrome/Edge 103+）。请把表格另存为 CSV 后拖入。'));
+    }
+    var ds = new DecompressionStream('deflate-raw');
+    var stream = new Blob([bytes]).stream().pipeThrough(ds);
+    return new Response(stream).arrayBuffer().then(function (b) { return new Uint8Array(b); });
+  }
+  function dec(bytes) { return new TextDecoder('utf-8').decode(bytes); }
+
+  function xlsxToTSV(u8) {
+    var files = unzipEntries(u8);
+    var names = Object.keys(files).filter(function (n) { return /^xl\/worksheets\/sheet\d+\.xml$/.test(n); }).sort();
+    if (!names.length) return Promise.reject(new Error('xlsx 里没找到工作表'));
+    var sheet = names[0];
+    var sheetCount = names.length;
+    var jobs = [inflateRaw(files[sheet].data)];
+    var hasShared = !!files['xl/sharedStrings.xml'];
+    if (hasShared) jobs.push(inflateRaw(files['xl/sharedStrings.xml'].data));
+    return Promise.all(jobs).then(function (res) {
+      var shared = [];
+      if (hasShared) {
+        var doc = new DOMParser().parseFromString(dec(res[1]), 'application/xml');
+        Array.prototype.forEach.call(doc.getElementsByTagName('si'), function (si) {
+          var txt = '';
+          Array.prototype.forEach.call(si.getElementsByTagName('t'), function (t) { txt += t.textContent; });
+          shared.push(txt);
+        });
+      }
+      var sd = new DOMParser().parseFromString(dec(res[0]), 'application/xml');
+      var rows = sd.getElementsByTagName('row'), out = [];
+      for (var i = 0; i < rows.length; i++) {
+        var cells = rows[i].getElementsByTagName('c'), line = [], col = -1;
+        for (var k = 0; k < cells.length; k++) {
+          var ref = cells[k].getAttribute('r') || '';
+          var m = /^([A-Z]+)/.exec(ref);
+          var idx = m ? colLetters(m[1]) : col + 1;
+          while (col + 1 < idx) { line.push(''); col++; }
+          var t = cells[k].getAttribute('t'), v = '';
+          if (t === 's') {
+            var vn = cells[k].getElementsByTagName('v')[0];
+            v = vn ? (shared[parseInt(vn.textContent, 10)] || '') : '';
+          } else if (t === 'inlineStr') {
+            Array.prototype.forEach.call(cells[k].getElementsByTagName('t'), function (tt) { v += tt.textContent; });
+          } else {
+            var vn2 = cells[k].getElementsByTagName('v')[0];
+            v = vn2 ? vn2.textContent : '';
+          }
+          line.push(String(v).trim());
+          col = idx;
+        }
+        out.push(line.join('\t'));
+      }
+      var tsv = out.join('\n');
+      if (sheetCount > 1) tsv = '# 注意：xlsx 含 ' + sheetCount + ' 个工作表，只读取了第一个\n' + tsv;
+      return tsv;
+    });
+  }
+  function colLetters(s) {
+    var n = 0;
+    for (var i = 0; i < s.length; i++) n = n * 26 + (s.charCodeAt(i) - 64);
+    return n - 1;
+  }
+
+  /* ====================================================== 列角色识别 */
+  // 用正则而不是简单 substring：否则 'Radii' 会被 'di' 命中、'Element' 会被 't' 命中
+  var KWR = {
+    el: /(^|[^a-z])(element|el|name|sample)(?![a-z])|元素|离子|样品/i,
+    ri: /(^|[^a-z])(ri|radius|radii|r)(?![a-z])|半径|ionic/i,
+    di: /(^|[^a-z])(di|d|partition|coefficient|kd)(?![a-z])|分配/i,
+    s1: /(^|[^a-z0-9])1s(?![a-z0-9])|(^|[^a-z])s1(?![a-z])|err|error|sigma|(?<![a-z])sd(?![a-z])|std|±|1σ|误差/i,
+    t: /(^|[^a-z])(t|temp|temperature)(?![a-z])|温度/i,
+    p: /(^|[^a-z])(p|pressure)(?![a-z])|压力/i
+  };
+  function matchRole(name, role) {
+    return KWR[role].test(String(name).trim());
+  }
+
+  /* ============================================================= 图表 */
+  var PALETTE = ['#4f9cf9', '#3ecf8e', '#f0a52b', '#c084fc', '#22d3ee', '#fb7185', '#a3e635'];
+  function cssVar(n) { return getComputedStyle(document.body).getPropertyValue(n).trim() || '#888'; }
+
+  function niceTicks(lo, hi, want) {
+    var span = hi - lo;
+    if (!(span > 0)) return [lo];
+    var raw = span / want;
+    var mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    var norm = raw / mag, step;
+    if (norm <= 1) step = 1; else if (norm <= 2) step = 2; else if (norm <= 2.5) step = 2.5;
+    else if (norm <= 5) step = 5; else step = 10;
+    step *= mag;
+    var out = [], v = Math.ceil(lo / step) * step;
+    for (; v <= hi + step * 1e-9; v += step) out.push(v);
+    return out;
+  }
+  function prepCanvas(c) {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    var cssH = Number(c.getAttribute('data-h') || 300);
+    var cssW = Math.max(320, c.parentElement.clientWidth - 24);
+    c.width = Math.round(cssW * dpr); c.height = Math.round(cssH * dpr);
+    c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+    var ctx = c.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+    return { ctx: ctx, w: cssW, h: cssH };
+  }
+  function fmtTick(v, step) {
+    if (v === 0) return '0';
+    var dec = Math.max(0, Math.min(9, Math.ceil(-Math.log10(Math.abs(step) * 0.999))));
+    var a = Math.abs(v);
+    if (a >= 1e5 || a < 1e-4) return Number(v).toExponential(0);
+    return Number(v).toFixed(dec);
+  }
+  function drawErrorBars(ctx, pts, sx, sy, color, capW) {
+    ctx.strokeStyle = color; ctx.lineWidth = 1.2;
+    pts.forEach(function (p) {
+      if (p.ey == null || !(p.ey > 0)) return;
+      if (!(p.y - p.ey > 0)) return;
+      var X = sx(p.x), Y1 = sy(p.y - p.ey), Y2 = sy(p.y + p.ey);
+      ctx.beginPath(); ctx.moveTo(X, Y1); ctx.lineTo(X, Y2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(X - capW, Y1); ctx.lineTo(X + capW, Y1);
+      ctx.moveTo(X - capW, Y2); ctx.lineTo(X + capW, Y2); ctx.stroke();
+    });
+  }
+  function drawLine(ctx, xs, ys, sx, sy, color, width) {
+    ctx.strokeStyle = color; ctx.lineWidth = width || 2; ctx.beginPath();
+    for (var i = 0; i < xs.length; i++) {
+      var X = sx(xs[i]), Y = sy(ys[i]);
+      if (!isFinite(X) || !isFinite(Y)) continue;
+      if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y);
+    }
+    ctx.stroke();
+  }
+  function drawPoly(ctx, points, sx, sy, color, width) {
+    ctx.strokeStyle = color; ctx.lineWidth = width || 2; ctx.beginPath();
+    points.forEach(function (p, i) { i ? ctx.lineTo(sx(p.x), sy(p.y)) : ctx.moveTo(sx(p.x), sy(p.y)); });
+    ctx.stroke();
+  }
+  function textBox(ctx, lines, x, y, align, fs) {
+    fs = fs || 12;
+    ctx.font = fs + 'px ui-monospace, Consolas, monospace';
+    var w = 0;
+    lines.forEach(function (l) { w = Math.max(w, ctx.measureText(l).width); });
+    var h = lines.length * (fs + 5) + 10;
+    var bx = align === 'right' ? x - w - 14 : x;
+    var by = y;
+    ctx.fillStyle = cssVar('--panel2'); ctx.globalAlpha = 0.94;
+    ctx.fillRect(bx, by, w + 14, h); ctx.globalAlpha = 1;
+    ctx.strokeStyle = cssVar('--line2'); ctx.lineWidth = 1; ctx.strokeRect(bx + .5, by + .5, w + 13, h - 1);
+    ctx.fillStyle = cssVar('--text');
+    lines.forEach(function (l, i) { ctx.fillText(l, bx + 7, by + fs + 5 + i * (fs + 5) - 2); });
+    return by + h;
+  }
+
+  /**
+   * 主拟合图：横轴 r_i (线性)，纵轴 D (对数)。
+   * opt = {points:[{x,y,ey,c,label}], curves:[{pts:[{x,y}],c,label}], boxes:[str],
+   *        xRange, yRange, yLabel}
+   */
+  function drawMainChart(canvas, opt) {
+    var g = prepCanvas(canvas), ctx = g.ctx, W = g.w, H = g.h;
+    var padL = 58, padR = 14, padT = 12, padB = 34;
+    var pw = W - padL - padR, ph = H - padT - padB;
+    var pts = opt.points || [];
+    var curves = opt.curves || [];
+
+    var xs = [];
+    pts.forEach(function (p) { xs.push(p.x); });
+    curves.forEach(function (c) { c.pts.forEach(function (p) { xs.push(p.x); }); });
+    var xlo = opt.xRange ? opt.xRange[0] : Math.min.apply(null, xs) - 0.03;
+    var xhi = opt.xRange ? opt.xRange[1] : Math.max.apply(null, xs) + 0.03;
+    var allY = [];
+    pts.forEach(function (p) {
+      if (p.y > 0) allY.push(p.y);
+      if (p.ey != null && p.y - p.ey > 0) allY.push(p.y - p.ey);
+      if (p.ey != null) allY.push(p.y + p.ey);
+    });
+    curves.forEach(function (c) { c.pts.forEach(function (p) { if (p.y > 0) allY.push(p.y); }); });
+    if (!allY.length) allY = [0.001, 1];
+    var ylo = opt.yRange ? opt.yRange[0] : Math.min.apply(null, allY);
+    var yhi = opt.yRange ? opt.yRange[1] : Math.max.apply(null, allY);
+    ylo = Math.max(ylo, 1e-12); if (yhi <= ylo) yhi = ylo * 10;
+    ylo = Math.pow(10, Math.floor(Math.log10(ylo))); yhi = Math.pow(10, Math.ceil(Math.log10(yhi)));
+
+    var sx = function (x) { return padL + (x - xlo) / (xhi - xlo) * pw; };
+    var sy = function (y) {
+      y = Math.max(y, ylo);
+      var a = Math.log10(y), b = Math.log10(ylo), c = Math.log10(yhi);
+      return padT + (1 - (a - b) / (c - b)) * ph;
+    };
+
+    // 网格 + y 轴（对数）
+    ctx.font = '11px ui-monospace, Consolas, monospace';
+    var d0 = Math.floor(Math.log10(ylo)), d1 = Math.ceil(Math.log10(yhi));
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (var d = d0; d <= d1; d++) {
+      var dec = [0.1, 0.2, 0.5].concat([1]);
+      for (var k = 0; k < 10; k++) {
+        var mult = (k === 0 ? 1 : (k === 1 ? 2 : (k === 2 ? 3 : (k === 5 ? 5 : null))));
+        if (d === d0 && k > 0) { /* 底部十进之间也画 */ }
+        if (mult == null) continue;
+        var val = mult * Math.pow(10, d);
+        if (val < ylo * 0.999 || val > yhi * 1.001) continue;
+        var Y = sy(val);
+        var major = (k === 0);
+        ctx.strokeStyle = major ? cssVar('--grid') : cssVar('--line');
+        ctx.globalAlpha = major ? 1 : 0.5;
+        ctx.beginPath(); ctx.moveTo(padL, Y); ctx.lineTo(padL + pw, Y); ctx.stroke();
+        ctx.globalAlpha = 1;
+        if (major) { ctx.fillStyle = cssVar('--muted'); ctx.fillText(fmtTick(val, Math.pow(10, d)), padL - 7, Y); }
+      }
+    }
+    // x 轴
+    var xticks = niceTicks(xlo, xhi, 6);
+    var xstep = xticks.length > 1 ? xticks[1] - xticks[0] : 0.1;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    xticks.forEach(function (t) {
+      var X = sx(t);
+      ctx.strokeStyle = cssVar('--grid');
+      ctx.beginPath(); ctx.moveTo(X, padT); ctx.lineTo(X, padT + ph); ctx.stroke();
+      ctx.fillStyle = cssVar('--muted'); ctx.fillText(fmtTick(t, xstep), X, padT + ph + 7);
+    });
+    ctx.strokeStyle = cssVar('--line2'); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + ph); ctx.lineTo(padL + pw, padT + ph); ctx.stroke();
+
+    // 曲线
+    curves.forEach(function (c) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(padL, padT, pw, ph); ctx.clip();
+      var seg = [], prevSign = null;
+      c.pts.forEach(function (p) {
+        var s = (p.y > 0 && isFinite(p.y)) ? 1 : -1;
+        if (prevSign !== null && s !== prevSign) { if (seg.length > 1) drawPoly(ctx, seg, sx, sy, c.c, 2.2); seg = []; }
+        if (s > 0) seg.push(p); else seg = [];
+        prevSign = s;
+      });
+      if (seg.length > 1) drawPoly(ctx, seg, sx, sy, c.c, 2.2);
+      ctx.restore();
+    });
+    // 误差棒
+    pts.forEach(function (p) { drawErrorBars(ctx, [p], sx, sy, p.c || cssVar('--pt'), 3.5); });
+    // 数据点
+    pts.forEach(function (p) {
+      ctx.fillStyle = p.c || cssVar('--pt');
+      ctx.strokeStyle = cssVar('--panel'); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(sx(p.x), sy(p.y), 3.8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    });
+    // 轴标签
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '12px -apple-system, "Segoe UI", "Microsoft YaHei"';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('离子半径 r_i (Å)', padL + pw / 2, padT + ph + 21);
+    ctx.save();
+    ctx.translate(13, padT + ph / 2); ctx.rotate(-Math.PI / 2);
+    ctx.textBaseline = 'middle'; ctx.fillText(opt.yLabel || 'D(Zircon/Melt)', 0, 0);
+    ctx.restore();
+    // 结果框
+    var by = padT + 6;
+    if (opt.boxes && opt.boxes.length) by = textBox(ctx, opt.boxes, padL + 8, padT + 6, 'left', 12);
+    if (opt.topleft) textBox(ctx, opt.topleft, padL + pw - 8, padT + 6, 'right', 12);
+    // 图例
+    if (opt.legend && opt.legend.length) {
+      var lx = padL + 10, ly = padT + ph - 14 - (opt.legend.length - 1) * 16;
+      ctx.font = '11.5px ui-monospace, Consolas, monospace'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      opt.legend.forEach(function (L, i) {
+        var y = ly + i * 16;
+        ctx.fillStyle = L.c; ctx.beginPath(); ctx.arc(lx + 4, y, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = cssVar('--text'); ctx.fillText(L.label, lx + 14, y + 1);
+      });
+    }
+    return { sx: sx, sy: sy, padL: padL, padT: padT, pw: pw, ph: ph };
+  }
+
+  /** 残差图：线性纵轴，带 ±参考线。bandLabel 为空时按 σ 标注 */
+  function drawResidChart(canvas, pts, yLabel, bands, bandLabel) {
+    var g = prepCanvas(canvas), ctx = g.ctx, W = g.w, H = g.h;
+    var padL = 58, padR = 14, padT = 22, padB = 34;
+    var pw = W - padL - padR, ph = H - padT - padB;
+    ctx.font = '11px ui-monospace, Consolas, monospace';
+    if (!pts.length) {
+      ctx.fillStyle = cssVar('--muted'); ctx.textAlign = 'center';
+      ctx.fillText('无残差数据', W / 2, H / 2);
+      return;
+    }
+    var xs = pts.map(function (p) { return p.x; }), rs = pts.map(function (p) { return p.r; });
+    var xlo = Math.min.apply(null, xs) - 0.02, xhi = Math.max.apply(null, xs) + 0.02;
+    var mx = Math.max.apply(null, rs.map(Math.abs));
+    var lim = Math.max(1e-6, mx * 1.15);
+    bands = bands || [];
+    bands.forEach(function (b) { lim = Math.max(lim, b * 1.2); });
+    var sx = function (x) { return padL + (x - xlo) / (xhi - xlo) * pw; };
+    var sy = function (r) { return padT + (1 - (r + lim) / (2 * lim)) * ph; };
+    // 参考线
+    bands.forEach(function (b) {
+      [b, -b].forEach(function (v, k) {
+        var Y = sy(v);
+        ctx.strokeStyle = cssVar('--line'); ctx.setLineDash(k ? [] : [4, 4]);
+        ctx.beginPath(); ctx.moveTo(padL, Y); ctx.lineTo(padL + pw, Y); ctx.stroke();
+        ctx.setLineDash([]);
+      });
+    });
+    ctx.strokeStyle = cssVar('--line2'); ctx.beginPath();
+    ctx.moveTo(padL, sy(0)); ctx.lineTo(padL + pw, sy(0)); ctx.stroke();
+    var ticks = niceTicks(-lim, lim, 4);
+    ticks.forEach(function (t) {
+      ctx.strokeStyle = cssVar('--grid'); ctx.beginPath();
+      ctx.moveTo(padL, sy(t)); ctx.lineTo(padL + pw, sy(t)); ctx.stroke();
+    });
+    ctx.fillStyle = cssVar('--muted'); ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    var stp = ticks.length > 1 ? Math.abs(ticks[1] - ticks[0]) : 1;
+    ticks.forEach(function (t) { ctx.fillText(fmtTick(t, stp), padL - 7, sy(t)); });
+    var xticks = niceTicks(xlo, xhi, 5), xs2 = xticks.length > 1 ? xticks[1] - xticks[0] : 0.1;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    xticks.forEach(function (t) { ctx.fillText(fmtTick(t, xs2), sx(t), padT + ph + 6); });
+    pts.forEach(function (p) {
+      ctx.fillStyle = p.c || cssVar('--pt');
+      ctx.beginPath(); ctx.arc(sx(p.x), sy(p.r), 3.4, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.fillStyle = cssVar('--muted'); ctx.font = '11px -apple-system, "Segoe UI", "Microsoft YaHei"';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText(yLabel, padL + 2, padT - 1);
+    if (bands.length) {
+      ctx.textAlign = 'right';
+      ctx.fillText(bandLabel || ('参考线 ±' + bands.join(' / ±')), padL + pw, padT - 1);
+    }
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('离子半径 r_i (Å)', padL + pw / 2, padT + ph + 19);
+  }
+
+  /* ===================================================== 通用：数据层 */
+  var ST = {};
+
+  function textareaOf(pfx) {
+    var m = { m1: 1, m2: 2, m3: 3 }[pfx];
+    return $('m' + m + '_data');
+  }
+  function refreshTable(pfx) {
+    var txt = textareaOf(pfx).value;
+    var t = parseDelimited(txt);
+    ST[pfx].table = t;
+    return t;
+  }
+  function colTitle(t, i) { return t.colNames[i] || ('列' + (i + 1)); }
+
+  function fillSelect(sel, t, role, allowNone, noneLabel) {
+    var prev = sel.value;
+    sel.innerHTML = '';
+    if (allowNone) {
+      var o = document.createElement('option');
+      o.value = '-1'; o.textContent = noneLabel || '— 无 —';
+      sel.appendChild(o);
+    }
+    for (var i = 0; i < t.nCol; i++) {
+      var op = document.createElement('option');
+      op.value = String(i);
+      op.textContent = (i + 1) + ': ' + colTitle(t, i);
+      sel.appendChild(op);
+    }
+    var has = Array.prototype.some.call(sel.options, function (o2) { return o2.value === prev; });
+    sel.value = has ? prev : '-1';
+  }
+  function autoMap(t, role, sel, allowNone) {
+    // 表头关键词优先
+    if (t.header) {
+      for (var i = 0; i < t.nCol; i++) {
+        if (matchRole(t.colNames[i], role)) {
+          if (allowNone) { /* 继续找 D 列，避免把 'D(Sample)' 抢成 element */ }
+          sel.value = String(i); return true;
+        }
+      }
+    }
+    return false;
+  }
+  function autoMapDi(t, sel) {
+    if (t.header) {
+      for (var i = 0; i < t.nCol; i++) {
+        var n = t.colNames[i].toLowerCase();
+        if (matchRole(n, 'di') && !matchRole(n, 's1')) { sel.value = String(i); return true; }
+      }
+    }
+    return false;
+  }
+  function detectLatticeMaps(pfx, force) {
+    var t = ST[pfx].table, s = ST[pfx].maps;
+    var ids = { el: pfx + '_mapEl', ri: pfx + '_mapRi', di: pfx + '_mapDi', s: pfx + '_mapS' };
+    Object.keys(ids).forEach(function (k) { fillSelect($(ids[k]), t, k, true); });
+    if (!t.nCol) return;
+    var numeric = {};
+    for (var i = 0; i < t.nCol; i++) {
+      var nNum = 0, tot = 0;
+      t.rows.forEach(function (r) { tot++; if (numCell(r[i]) !== null) nNum++; });
+      numeric[i] = tot ? nNum / tot : 0;
+    }
+    if (force || !s.inited) {
+      autoMap(t, 'el', $(ids.el), true) || ($(ids.el).value = '-1');
+      autoMap(t, 'ri', $(ids.ri), true);
+      autoMapDi(t, $(ids.di));
+      autoMap(t, 's1', $(ids.s), true) || ($(ids.s).value = '-1');
+      // 无表头时的启发式
+      if (!t.header) {
+        if (numeric[0] < 0.3) {
+          $(ids.el).value = '0'; $(ids.ri).value = '1'; $(ids.di).value = '2'; $(ids.s).value = t.nCol > 3 ? '3' : '-1';
+        } else {
+          $(ids.el).value = '-1';
+          var cands = [];
+          for (var c = 0; c < t.nCol; c++) if (numeric[c] > 0.8) cands.push(c);
+          if (cands.length >= 3 && isRadiusCol(t, cands[0])) {
+            $(ids.ri).value = String(cands[0]); $(ids.di).value = String(cands[1]); $(ids.s).value = String(cands[2]);
+          } else if (cands.length >= 2) {
+            $(ids.ri).value = String(cands[0]); $(ids.di).value = String(cands[1]); $(ids.s).value = '-1';
+          }
+        }
+      } else {
+        if ($(ids.ri).value === '-1') {
+          for (var c2 = 0; c2 < t.nCol; c2++) if (numeric[c2] > 0.8 && isRadiusCol(t, c2)) { $(ids.ri).value = String(c2); break; }
+        }
+        if ($(ids.di).value === '-1') {
+          for (var c3 = 0; c3 < t.nCol; c3++) {
+            if (String(c3) !== $(ids.ri).value && String(c3) !== $(ids.el).value && numeric[c3] > 0.8) { $(ids.di).value = String(c3); break; }
+          }
+        }
+      }
+      s.inited = true;
+    }
+    s.el = Number($(ids.el).value); s.ri = Number($(ids.ri).value);
+    s.di = Number($(ids.di).value); s.s = Number($(ids.s).value);
+    s.tCol = -1; s.pCol = -1;
+    for (var c4 = 0; c4 < t.nCol; c4++) {
+      if (matchRole(t.colNames[c4], 't') && s.tCol < 0) s.tCol = c4;
+      if (matchRole(t.colNames[c4], 'p') && s.pCol < 0) s.pCol = c4;
+    }
+  }
+  function isRadiusCol(t, c) {
+    var ok = 0, tot = 0;
+    t.rows.forEach(function (r) { var v = numCell(r[c]); if (v !== null) { tot++; if (v > 0.6 && v < 1.7) ok++; } });
+    return tot > 0 && ok / tot > 0.8;
+  }
+
+  function extractLattice(pfx) {
+    var t = ST[pfx].table, s = ST[pfx].maps, out = { rows: [], issues: [] };
+    var minPoints = pfx === 'm2' ? 3 : 4;
+    if (!t.rows.length) { out.issues.push(['e', '没有解析到数据行。请粘贴表格或拖入文件。']); return out; }
+    if (s.ri < 0) { out.issues.push(['e', '未指定「离子半径 ri」列。']); return out; }
+    if (s.di < 0) { out.issues.push(['e', '未指定「分配系数 D」列。']); return out; }
+    var dup = {}, dropped = 0, noErr = 0, badRadius = 0;
+    t.rows.forEach(function (r, idx) {
+      var ri = numCell(r[s.ri]), di = numCell(r[s.di]);
+      var el = s.el >= 0 ? (r[s.el] || '') : ('行' + (idx + 2));
+      var s1 = s.s >= 0 ? numCell(r[s.s]) : null;
+      if (ri === null || di === null) { dropped++; return; }
+      if (!(di > 0)) { dropped++; return; }
+      if (ri < 0.6 || ri > 1.7) badRadius++;
+      if (s1 === null) noErr++;
+      if (dup[ri]) out.issues.push(['w', '离子半径 ri = ' + ri + ' 出现重复（' + el + '）。']);
+      dup[ri] = true;
+      out.rows.push({ el: el, ri: ri, di: di, s1: s1 });
+    });
+    if (dropped) out.issues.push(['w', '有 ' + dropped + ' 行被跳过（ri 或 D 缺失、D ≤ 0 无法取对数）。']);
+    if (badRadius) out.issues.push(['w', '有 ' + badRadius + ' 行的 ri 超出常见 REE 半径范围 0.6–1.7 Å，请确认列映射。']);
+    if (noErr && s.s >= 0) out.issues.push(['w', '有 ' + noErr + ' 行缺误差值，将按 σ=1 处理。']);
+    if (!noErr && s.s < 0) out.issues.push(['i', '未指定误差列：按不加权（σ=1）拟合。']);
+    if (out.rows.length < minPoints) out.issues.push(['e', '有效数据点只有 ' + out.rows.length + ' 个，拟合至少需要 ' + minPoints + ' 个点。']);
+    else if (out.rows.length < 6) out.issues.push(['w', '数据点较少（' + out.rows.length + '），参数误差可能不可靠。']);
+    var span = out.rows.length > 1 ? Math.max.apply(null, out.rows.map(function (r) { return r.ri; })) - Math.min.apply(null, out.rows.map(function (r) { return r.ri; })) : 0;
+    if (span > 0 && span < 0.08) out.issues.push(['w', '半径跨度只有 ' + span.toFixed(3) + ' Å，拟合会病态（E 与 r₀ 高度相关）。']);
+    return out;
+  }
+
+  function setMsgs(pfx, list) {
+    var ul = $(pfx + '_msgs');
+    ul.innerHTML = list.map(function (m) { return '<li class="' + m[0] + '">' + esc(m[1]) + '</li>'; }).join('');
+  }
+
+  function renderPreview(pfx, data, res) {
+    var box = $(pfx + '_stats');
+    var rows = data.rows;
+    if (!rows.length) { box.innerHTML = '<p class="hint" style="padding:10px">暂无数据</p>'; return; }
+    var h = '<table class="data"><thead><tr><th>#</th><th>元素</th><th>ri (Å)</th><th>D 实测</th><th>1σ</th>';
+    if (res) h += '<th>D 计算</th><th>加权残差</th>';
+    h += '</tr></thead><tbody>';
+    rows.forEach(function (r, i) {
+      var bad = '';
+      if (res) {
+        var w = (r.di - res.pred[i]) / (res.sigmaMode.sigma[i] || 1);
+        var flag = Math.abs(w);
+        bad = (flag > 3) ? ' class="bl"' : '';
+      }
+      h += '<tr' + bad + '><td>' + (i + 1) + '</td><td>' + esc(r.el) + '</td><td>' + r.ri.toFixed(3) + '</td><td>' +
+        (r.di < 0.01 ? r.di.toExponential(3) : r.di.toPrecision(5)) + '</td><td>' + (r.s1 == null ? '—' : (r.s1 < 0.01 ? r.s1.toExponential(2) : r.s1.toPrecision(3))) + '</td>';
+      if (res) {
+        var dc = res.pred[i];
+        h += '<td>' + (dc < 0.01 ? dc.toExponential(3) : dc.toPrecision(5)) + '</td><td>' +
+          (((r.di - dc) / (res.sigmaMode.sigma[i] || 1))).toFixed(2) + '</td>';
+      }
+      h += '</tr>';
+    });
+    h += '</tbody></table>';
+    box.innerHTML = h;
+  }
+
+  /* ============================================== 结果卡片与统计表渲染 */
+  function bigvals(pfx, items) {
+    $(pfx + '_bigvals').innerHTML = items.map(function (it) {
+      return '<div class="bv"><div class="k">' + it.k + '</div><div class="v">' + it.v +
+        (it.u ? ' <span class="u">' + it.u + '</span>' : '') + '</div>' +
+        (it.e ? '<div class="e">' + it.e + '</div>' : '') + '</div>';
+    }).join('');
+  }
+  function statsTable(pfx, rows) {
+    return '<table class="data"><tbody>' + rows.map(function (r) {
+      return '<tr><td style="color:var(--muted)">' + r[0] + '</td><td>' + r[1] + '</td></tr>';
+    }).join('') + '</tbody></table>';
+  }
+  function convergenceTags(res) {
+    var t = [];
+    if (res.optimalityVerified) t.push('<span class="tag ok">最优性已验证</span>');
+    else t.push('<span class="tag err">收敛可疑</span>');
+    if (res.boundHit) t.push('<span class="tag warn">触及参数边界</span>');
+    if (res.chi2red != null && res.chi2red > 4) t.push('<span class="tag warn">χ²/dof 偏大 (' + fx(res.chi2red, 2) + ')</span>');
+    t.push('<span class="tag">迭代 ' + res.iters + '</span>');
+    return t.join('');
+  }
+
+  /* ========================================================== ① 自由拟合 */
+  function computeM1() {
+    var pfx = 'm1', st = ST[pfx];
+    refreshTable(pfx);
+    detectLatticeMaps(pfx);
+    var data = extractLattice(pfx);
+    var msgs = data.issues.slice();
+    if (!data.rows.length || data.rows.length < 4 || st.maps.ri < 0 || st.maps.di < 0) {
+      setMsgs(pfx, msgs);
+      renderPreview(pfx, data, null);
+      $(pfx + '_report').textContent = '数据不足，无法拟合。';
+      bigvals(pfx, [{ k: '状态', v: '待输入' }]);
+      st.res = null;
+      setBadge(pfx, '数据不足', 'err'); setStatus('数据不足', 'err');
+      return;
+    }
+    var T = Number($(pfx + '_T').value), P = Number($(pfx + '_P').value);
+    if (!isFinite(T)) {
+      msgs.push(['e', '温度 T 无效，请填写数值。']);
+      setMsgs(pfx, msgs); setBadge(pfx, '参数错误', 'err'); setStatus('参数错误', 'err'); st.res = null; return;
+    }
+    var errMode = $(pfx + '_errmode').value;
+    if (errMode === 'none') msgs.push(['i', '按不加权拟合（σ=1），误差标度设置被忽略。']);
+    var absSigma = $(pfx + '_abs').value === 'abs1';
+    var res;
+    try {
+      res = ZR.fitFree({
+        ri: data.rows.map(function (r) { return r.ri; }),
+        di: data.rows.map(function (r) { return r.di; }),
+        s1: data.rows.map(function (r) { return r.s1 == null ? 1 : r.s1; }),
+        T_C: T, P_GPa: P, errMode: errMode, absoluteSigma: absSigma
+      });
+    } catch (e) {
+      msgs.push(['e', '拟合失败：' + e.message]);
+      setMsgs(pfx, msgs); setBadge(pfx, '拟合失败', 'err'); setStatus('拟合失败', 'err');
+      return;
+    }
+    res.rows = data.rows;
+    st.res = res; st.data = data;
+    if (res.sigmaMode.degraded) msgs.push(['w', '有 ' + res.sigmaMode.degraded + ' 个误差值无效（≤0 或非数值），已按 σ=1 处理。']);
+    if (res.fit.boundHit) msgs.push(['w', '有参数顶在边界上，说明该模型/数据组合不合适，结果不可直接使用。']);
+    setMsgs(pfx, msgs);
+
+    var conv = res.conv, T_K = res.T_K;
+    bigvals(pfx, [
+      { k: 'D₀', v: fx(res.D0, 2), e: '± ' + fx(res.dD0, 2) },
+      { k: 'r₀ (Å)', v: fx(res.r0, 4), e: '± ' + fx(res.dr0, 4) },
+      { k: 'E (GPa)', v: fx(res.E_GPa, 0), e: '± ' + fx(res.dE_GPa, 0) },
+      { k: '拟合质量', v: fx(res.stats.r2_log, 4), u: 'R²(logD)', e: 'χ²/dof = ' + fx(res.fit.chi2red, 3) }
+    ]);
+    $(pfx + '_report').textContent = reportM1(res, data);
+    $(pfx + '_stats').innerHTML = statsTable(pfx, [
+      ['数据点数 N', String(data.rows.length)],
+      ['自由度 dof', String(res.fit.dof)],
+      ['加权 χ²', fx(res.fit.ssr, 4)],
+      ['χ²/dof', fx(res.fit.chi2red, 4)],
+      ['RMSWD = √(χ²/N)', fx(Math.sqrt(res.fit.ssr / data.rows.length), 4)],
+      ['R²(log₁₀D)', fx(res.stats.r2_log, 5)],
+      ['RMS(log₁₀D)', fx(res.stats.rms_log, 4)],
+      ['最大 |Δlog₁₀D|', fx(res.stats.maxResLog, 4)],
+      ['温度 T', fx(T, 1) + ' °C = ' + fx(T_K, 2) + ' K'],
+      ['压力 P（仅标注）', fmtP(P) + ' GPa'],
+      ['E 换算因子', sig(conv, 6) + ' GPa per unit'],
+      ['误差标度', absSigma ? '绝对 1σ（absolute_sigma=True）' : '按 χ² 缩放（False）'],
+      ['求解器', 'LM + GN 抛光，迭代 ' + res.fit.iters + ' 次，判据 ' + res.fit.reason]
+    ]) + '<div class="tags" style="padding:8px 10px">' + convergenceTags(res.fit) + '</div>';
+    renderPreview(pfx, data, res);
+    drawM1Charts(res, data);
+    setBadge(pfx, '已计算', 'ok'); setStatus('计算完成 · ' + data.rows.length + ' 点', 'ok');
+  }
+
+  function reportM1(res, data) {
+    var L = [];
+    L.push('── 自由晶格应变拟合结果 ─────────────────────────');
+    L.push('D₀  = ' + pm(res.D0, res.dD0));
+    L.push('r₀  = ' + pm(res.r0, res.dr0, 'Å'));
+    L.push('E   = ' + pm(res.E_GPa, res.dE_GPa, 'GPa'));
+    L.push('');
+    L.push('条件   T = ' + fx($('m1_T').value, 1) + ' °C (' + fx(res.T_K, 2) + ' K)' +
+      '，P = ' + fmtP(Number($('m1_P').value)) + ' GPa（仅标注）');
+    L.push('数据   N = ' + data.rows.length + '，误差 ' + errLabel('m1') +
+      '，dof = ' + res.fit.dof);
+    L.push('质量   χ²/dof = ' + fx(res.fit.chi2red, 4) +
+      '，RMSWD = ' + fx(Math.sqrt(res.fit.ssr / data.rows.length), 4) +
+      '，R²(log₁₀D) = ' + fx(res.stats.r2_log, 5));
+    L.push('收敛   ' + (res.fit.optimalityVerified ? '最优性已验证（±1e-8 窗口内无更低 SSR）' : '未达最优，请检查数据') +
+      (res.fit.boundHit ? '｜警告：参数触界' : ''));
+    L.push('生成   ' + TOOL + ' v' + VER + '  ' + stamp());
+    return L.join('\n');
+  }
+  function errLabel(pfx) {
+    var v = $(pfx + '_errmode').value;
+    return v === 'abs' ? '绝对 1σ' : (v === 'pct' ? '相对百分数' : '不加权');
+  }
+
+  function drawM1Charts(res, data) {
+    var box = ['D₀ = ' + fx(res.D0, 2) + ' ± ' + fx(res.dD0, 2),
+      'r₀ = ' + fx(res.r0, 4) + ' ± ' + fx(res.dr0, 4) + ' Å',
+      'E  = ' + fx(res.E_GPa, 0) + ' ± ' + fx(res.dE_GPa, 0) + ' GPa'];
+    var riMin = Math.min.apply(null, data.rows.map(function (r) { return r.ri; }));
+    var riMax = Math.max.apply(null, data.rows.map(function (r) { return r.ri; }));
+    var xlo = Math.min(0.8, riMin - 0.05), xhi = Math.max(1.22, riMax + 0.05);
+    var curve = [], n = 260;
+    for (var i = 0; i <= n; i++) {
+      var x = xlo + (xhi - xlo) * i / n;
+      curve.push({ x: x, y: res.pred.length ? ZR.MODEL_FREE.eval(x, res.fit.p) : NaN });
+    }
+    drawMainChart($('m1_chart'), {
+      points: data.rows.map(function (r) { return { x: r.ri, y: r.di, ey: r.s1, c: cssVar('--pt') }; }),
+      curves: [{ pts: curve, c: cssVar('--curve') }],
+      xRange: [xlo, xhi], boxes: box,
+      topleft: [fmtP(Number($('m1_P').value)) + ' GPa']
+    });
+    drawResidChart($('m1_resid'), data.rows.map(function (r, i) {
+      return { x: r.ri, r: (r.di - res.pred[i]) / (res.sigmaMode.sigma[i] || 1), c: cssVar('--curve') };
+    }), '加权残差 (D_obs − D_calc)/σ', [1, 2], '参考线 ±1σ / ±2σ');
+  }
+
+  /* ======================================================== ② 约束拟合 */
+  function computeM2() {
+    var pfx = 'm2', st = ST[pfx];
+    refreshTable(pfx);
+    detectLatticeMaps(pfx);
+    var data = extractLattice(pfx);
+    var msgs = data.issues.slice();
+    if (!data.rows.length || data.rows.length < 3 || st.maps.ri < 0 || st.maps.di < 0) {
+      setMsgs(pfx, msgs); renderPreview(pfx, data, null);
+      $(pfx + '_report').textContent = '数据不足，无法拟合。';
+      bigvals(pfx, [{ k: '状态', v: '待输入' }]);
+      st.res = null; setBadge(pfx, '数据不足', 'err'); setStatus('数据不足', 'err');
+      return;
+    }
+    var T = Number($(pfx + '_T').value), Q = Number($(pfx + '_Q').value), P = Number($(pfx + '_P').value);
+    var errMode = $(pfx + '_errmode').value;
+    var absSigma = $(pfx + '_abs').value === 'abs1';
+    var res;
+    try {
+      res = ZR.fitConstrained({
+        ri: data.rows.map(function (r) { return r.ri; }),
+        di: data.rows.map(function (r) { return r.di; }),
+        s1: data.rows.map(function (r) { return r.s1 == null ? 1 : r.s1; }),
+        T_C: T, Q: Q, errMode: errMode, absoluteSigma: absSigma
+      });
+    } catch (e) {
+      msgs.push(['e', '拟合失败：' + e.message]); setMsgs(pfx, msgs);
+      setBadge(pfx, '拟合失败', 'err'); setStatus('拟合失败', 'err'); return;
+    }
+    res.rows = data.rows; st.res = res; st.data = data;
+    if (res.fit.boundHit) msgs.push(['w', '有参数顶在边界上，结果不可直接使用。']);
+    setMsgs(pfx, msgs);
+    bigvals(pfx, [
+      { k: 'D₀', v: fx(res.D0, 3), e: '± ' + fx(res.dD0, 3) },
+      { k: 'r₀ (Å)', v: fx(res.r0, 4), e: '± ' + fx(res.dr0, 4) },
+      { k: 'E (GPa)', v: fx(res.E_GPa, 1), e: '± ' + fx(res.dE_GPa, 1) },
+      { k: '拟合质量', v: fx(res.stats.r2_log, 4), u: 'R²(logD)', e: 'χ²/dof = ' + fx(res.fit.chi2red, 3) }
+    ]);
+    $(pfx + '_report').textContent = [
+      '── 约束晶格应变拟合结果（锆石，Q 约束） ─────────',
+      'D₀  = ' + pm(res.D0, res.dD0),
+      'r₀  = ' + pm(res.r0, res.dr0, 'Å'),
+      'E   = ' + pm(res.E_GPa, res.dE_GPa, 'GPa') + '   （由 Q 推出，误差按 2 阶泰勒传播）',
+      '',
+      '约束   Q = ' + Q + '（' + (Q === 6489 ? 'Q₁' : 'Q₂') + '），E = Q/(1.38+r₀)³',
+      '条件   T = ' + fx(T, 1) + ' °C (' + fx(res.T_K, 2) + ' K)，P = ' + fmtP(P) + ' GPa（仅标注）',
+      '数据   N = ' + data.rows.length + '，误差 ' + errLabel('m2') + '，dof = ' + res.fit.dof,
+      '质量   χ²/dof = ' + fx(res.fit.chi2red, 4) + '，RMSWD = ' + fx(Math.sqrt(res.fit.ssr / data.rows.length), 4) +
+      '，R²(log₁₀D) = ' + fx(res.stats.r2_log, 5),
+      '收敛   ' + (res.fit.optimalityVerified ? '最优性已验证' : '未达最优，请检查数据') + (res.fit.boundHit ? '｜警告：参数触界' : ''),
+      '生成   ' + TOOL + ' v' + VER + '  ' + stamp()
+    ].join('\n');
+    $(pfx + '_stats').innerHTML = statsTable(pfx, [
+      ['数据点数 N', String(data.rows.length)],
+      ['自由度 dof', String(res.fit.dof)],
+      ['加权 χ²', fx(res.fit.ssr, 4)],
+      ['χ²/dof', fx(res.fit.chi2red, 4)],
+      ['RMSWD', fx(Math.sqrt(res.fit.ssr / data.rows.length), 4)],
+      ['R²(log₁₀D)', fx(res.stats.r2_log, 5)],
+      ['RMS(log₁₀D)', fx(res.stats.rms_log, 4)],
+      ['约束常数 Q', String(Q) + ' ×10⁻²¹ J'],
+      ['约束强度 indi_var', sig(res.indiVar, 6)],
+      ['温度 T', fx(T, 1) + ' °C = ' + fx(res.T_K, 2) + ' K'],
+      ['误差标度', absSigma ? '绝对 1σ（True）' : '按 χ² 缩放（False）'],
+      ['求解器', 'LM + GN 抛光，迭代 ' + res.fit.iters + ' 次，判据 ' + res.fit.reason]
+    ]) + '<div class="tags" style="padding:8px 10px">' + convergenceTags(res.fit) + '</div>';
+    renderPreview(pfx, data, res);
+    drawM2Charts(res, data, Q);
+    setBadge(pfx, '已计算', 'ok'); setStatus('计算完成 · Q=' + Q, 'ok');
+  }
+
+  function drawM2Charts(res, data, Q) {
+    var riMin = Math.min.apply(null, data.rows.map(function (r) { return r.ri; }));
+    var riMax = Math.max.apply(null, data.rows.map(function (r) { return r.ri; }));
+    var xlo = Math.min(0.8, riMin - 0.05), xhi = Math.max(1.22, riMax + 0.05);
+    var curve = [], n = 260;
+    for (var i = 0; i <= n; i++) {
+      var x = xlo + (xhi - xlo) * i / n;
+      curve.push({ x: x, y: res.pred.length ? ZR.makeModelC1(res.indiVar).eval(x, res.fit.p) : NaN });
+    }
+    drawMainChart($('m2_chart'), {
+      points: data.rows.map(function (r) { return { x: r.ri, y: r.di, ey: r.s1, c: cssVar('--pt') }; }),
+      curves: [{ pts: curve, c: cssVar('--curve') }],
+      xRange: [xlo, xhi],
+      boxes: ['D₀ = ' + fx(res.D0, 3) + ' ± ' + fx(res.dD0, 3),
+        'r₀ = ' + fx(res.r0, 4) + ' ± ' + fx(res.dr0, 4) + ' Å',
+        'E  = ' + fx(res.E_GPa, 1) + ' ± ' + fx(res.dE_GPa, 1) + ' GPa',
+        'Q  = ' + Q],
+      topleft: [fmtP(Number($('m2_P').value)) + ' GPa']
+    });
+    drawResidChart($('m2_resid'), data.rows.map(function (r, i) {
+      return { x: r.ri, r: (r.di - res.pred[i]) / (res.sigmaMode.sigma[i] || 1), c: cssVar('--curve') };
+    }), '加权残差 (D_obs − D_calc)/σ', [1, 2], '参考线 ±1σ / ±2σ');
+  }
+
+  /* ========================================================= ③ 温度计 */
+  function detectThermoMaps(pfx) {
+    var t = ST[pfx].table, s = ST[pfx].maps;
+    fillSelect($(pfx + '_mapRi'), t, 'ri', false);
+    if (!t.nCol) { s.samples = []; return; }
+    var numeric = {};
+    for (var i = 0; i < t.nCol; i++) {
+      var nNum = 0;
+      t.rows.forEach(function (r) { if (numCell(r[i]) !== null) nNum++; });
+      numeric[i] = t.rows.length ? nNum / t.rows.length : 0;
+    }
+    if (!s.inited) {
+      var pick = -1;
+      if (t.header) {
+        for (var c = 0; c < t.nCol; c++) if (isRadiusCol(t, c)) { pick = c; break; }
+      }
+      if (pick < 0) { for (var c2 = 0; c2 < t.nCol; c2++) if (numeric[c2] > 0.9 && isRadiusCol(t, c2)) { pick = c2; break; } }
+      if (pick < 0) pick = 0;
+      $(pfx + '_mapRi').value = String(pick);
+      s.inited = true;
+    }
+    s.ri = Number($(pfx + '_mapRi').value);
+    s.samples = [];
+    for (var i2 = 0; i2 < t.nCol; i2++) {
+      if (i2 === s.ri) continue;
+      if (!(numeric[i2] > 0.5)) continue;
+      s.samples.push(i2);
+    }
+    $(pfx + '_samples').textContent = s.samples.length
+      ? s.samples.map(function (i3) { return colTitle(t, i3); }).join('、')
+      : '（未识别到样品列）';
+  }
+
+  function extractThermo(pfx) {
+    var t = ST[pfx].table, s = ST[pfx].maps, out = { radii: [], columns: {}, issues: [], headers: [] };
+    if (!t.rows.length) { out.issues.push(['e', '没有解析到数据行。']); return out; }
+    if (!s.samples.length) { out.issues.push(['e', '未识别到样品列（半径列之外至少需要一个数值列）。']); return out; }
+    var rows = [];
+    t.rows.forEach(function (r) {
+      var ri = numCell(r[s.ri]);
+      if (ri === null) return;
+      rows.push({ ri: ri, r: r });
+    });
+    out.radii = rows.map(function (x) { return x.ri; });
+    s.samples.forEach(function (ci) {
+      var name = colTitle(t, ci), vals = [];
+      rows.forEach(function (x) { var v = numCell(x.r[ci]); vals.push(v); });
+      out.columns[name] = vals;
+      out.headers.push(name);
+    });
+    if (rows.length < 3) out.issues.push(['e', '只有 ' + rows.length + ' 个半径数据点，反演温度至少需要 3 个。']);
+    else if (rows.length < 6) out.issues.push(['w', '半径数据点较少（' + rows.length + '），温度误差可能不可靠。']);
+    Object.keys(out.columns).forEach(function (k) {
+      var v = out.columns[k], bad = 0;
+      v.forEach(function (x) { if (x === null || !(x > 0)) bad++; });
+      if (bad) out.issues.push(['e', '样品「' + k + '」有 ' + bad + ' 个 D 值缺失或 ≤ 0，无法反演。']);
+    });
+    out.rows = rows;
+    return out;
+  }
+
+  function computeM3() {
+    var pfx = 'm3', st = ST[pfx];
+    refreshTable(pfx);
+    detectThermoMaps(pfx);
+    var data = extractThermo(pfx);
+    var msgs = data.issues.slice();
+    var fatal = msgs.some(function (m) { return m[0] === 'e'; });
+    if (fatal) {
+      setMsgs(pfx, msgs); renderPreviewThermo(pfx, data, null, null);
+      $(pfx + '_report').textContent = '数据不足，无法反演温度。';
+      setBadge(pfx, '数据不足', 'err'); setStatus('数据不足', 'err'); st.res = null; return;
+    }
+    var Q = Number($(pfx + '_Q').value), r0 = Number($(pfx + '_r0').value);
+    var d0m = $(pfx + '_d0').value, absSigma = $(pfx + '_abs').value === 'abs1';
+    var res;
+    try {
+      res = ZR.fitThermo({
+        radii: data.radii, columns: data.columns, Q: Q, r0: r0,
+        d0Model: d0m, absoluteSigma: absSigma
+      });
+    } catch (e) {
+      msgs.push(['e', '反演失败：' + e.message]); setMsgs(pfx, msgs);
+      setBadge(pfx, '反演失败', 'err'); setStatus('反演失败', 'err'); return;
+    }
+    res.samples.forEach(function (s) {
+      if (s.fit.boundHit) msgs.push(['w', '样品「' + s.sample + '」的温度顶在边界上，结果不可用。']);
+      if (!s.fit.optimalityVerified) msgs.push(['w', '样品「' + s.sample + '」未达最优，解可能不唯一。']);
+    });
+    setMsgs(pfx, msgs);
+    st.res = res; st.data = data;
+    // 温度计是无权重拟合（原脚本不给 σ），残差用对数域表示才有物理意义，
+    // 因此这里报 RMS(log₁₀D) 与最大偏差，而不是容易被误读的 χ²/dof。
+    var rows = res.samples.map(function (s) {
+      var mx = 0;
+      data.radii.forEach(function (_, k) {
+        var ob = data.columns[s.sample][k], dc = s.pred[k];
+        if (ob > 0 && dc > 0) mx = Math.max(mx, Math.abs(Math.log10(ob) - Math.log10(dc)));
+      });
+      return { s: s, maxLog: mx };
+    });
+    $(pfx + '_report').textContent = [
+      '── REE 锆石–熔体温度计反演结果 ──────────────────',
+      '模型   Q = ' + Q + '，r₀ = ' + r0 + ' Å，D₀(T) = ' + res.d0Label,
+      '公式   D_i = exp(A/T + B)·exp[(k/T)·B(r_i,r₀)/(1.38+r₀)³]，k = −4πN_A·Q/R',
+      '',
+      padW('样品', 16) + padW('T (K)', 21) + padW('T (°C)', 21) + padW('RMS(log₁₀D)', 14) + '最大|Δlog₁₀D|',
+      rows.map(function (r) {
+        var s = r.s;
+        return padW(s.sample, 16) + padW(fx(s.T_K, 2) + ' ± ' + fx(s.dT_K, 2), 21) +
+          padW(fx(s.T_C, 2) + ' ± ' + fx(s.dT_K, 2), 21) + padW(fx(s.stats.rms_log, 4), 14) + fx(r.maxLog, 4);
+      }).join('\n'),
+      '',
+      '数据   N = ' + data.radii.length + ' 个半径点，' + res.samples.length + ' 个样品',
+      '误差   1σ 由协方差矩阵给出（' + (absSigma ? 'absolute_sigma=True' : '按 χ² 缩放') + '），仅反映数据点分散度，不是真实地质不确定度',
+      '生成   ' + TOOL + ' v' + VER + '  ' + stamp()
+    ].join('\n');
+    $(pfx + '_stats').innerHTML = '<table class="data"><thead><tr><th>样品</th><th>T (K)</th><th>±1σ</th><th>T (°C)</th><th>±1σ</th><th>RMS(log₁₀D)</th><th>最大|Δlog₁₀D|</th><th>dof</th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        var s = r.s;
+        return '<tr><td>' + esc(s.sample) + '</td><td>' + fx(s.T_K, 2) + '</td><td>' + fx(s.dT_K, 2) + '</td><td>' +
+          fx(s.T_C, 2) + '</td><td>' + fx(s.dT_K, 2) + '</td><td>' + fx(s.stats.rms_log, 4) + '</td><td>' +
+          fx(r.maxLog, 4) + '</td><td>' + s.fit.dof + '</td></tr>';
+      }).join('') + '</tbody></table>' +
+      '<p class="hint" style="padding:8px 2px 0">温度计是无权重拟合（原脚本不提供 σ），所以不报 χ²/dof，' +
+      '改报对数域残差 RMS 与最大偏差 —— 后者约等于「曲线偏离数据点几个 dex」。</p>';
+    renderPreviewThermo(pfx, data, res, null);
+    drawM3Charts(res, data);
+    setBadge(pfx, res.samples.length + ' 个样品', 'ok');
+    setStatus('反演完成 · ' + res.samples.length + ' 个样品', 'ok');
+  }
+  function pad(s, n) {
+    s = String(s);
+    while (s.length < n) s += ' ';
+    return s;
+  }
+  /** 等宽字体下 CJK 占两列，按显示宽度补空格 */
+  function dispW(s) {
+    var w = 0;
+    for (var i = 0; i < s.length; i++) {
+      var c = s.charCodeAt(i);
+      var wide = (c >= 0x1100 && c <= 0x115f) || (c >= 0x2e80 && c <= 0xa4cf) ||
+        (c >= 0xac00 && c <= 0xd7a3) || (c >= 0xf900 && c <= 0xfaff) ||
+        (c >= 0xfe30 && c <= 0xfe6f) || (c >= 0xff00 && c <= 0xff60) || (c >= 0xffe0 && c <= 0xffe6);
+      w += wide ? 2 : 1;
+    }
+    return w;
+  }
+  function padW(s, n) {
+    s = String(s);
+    var w = dispW(s);
+    while (w < n) { s += ' '; w++; }
+    return s;
+  }
+  function renderPreviewThermo(pfx, data, res, _x) {
+    var box = $(pfx + '_stats');
+    if (!data.radii || !data.radii.length) { box.innerHTML = '<p class="hint" style="padding:10px">暂无数据</p>'; return; }
+    var h = '<table class="data"><thead><tr><th>#</th><th>ri (Å)</th>';
+    data.headers.forEach(function (n) { h += '<th>' + esc(n) + '</th>'; });
+    h += res ? '<th>最大 |Δlog₁₀D|</th>' : '';
+    h += '</tr></thead><tbody>';
+    data.radii.forEach(function (ri, i) {
+      h += '<tr><td>' + (i + 1) + '</td><td>' + ri.toFixed(3) + '</td>';
+      data.headers.forEach(function (n) {
+        var v = data.columns[n][i];
+        h += '<td>' + (v == null ? '—' : (v < 0.01 ? v.toExponential(3) : v.toPrecision(5))) + '</td>';
+      });
+      if (res) {
+        var dmax = 0;
+        res.samples.forEach(function (s) {
+          var dc = s.pred[i], ob = data.columns[s.sample][i];
+          if (ob > 0 && dc > 0) dmax = Math.max(dmax, Math.abs(Math.log10(dc) - Math.log10(ob)));
+        });
+        h += '<td>' + dmax.toFixed(3) + '</td>';
+      }
+      h += '</tr>';
+    });
+    box.innerHTML = h + '</tbody></table>';
+  }
+
+  function drawM3Charts(res, data) {
+    var riMin = Math.min.apply(null, data.radii), riMax = Math.max.apply(null, data.radii);
+    var xlo = Math.min(0.8, riMin - 0.04), xhi = Math.max(1.22, riMax + 0.04);
+    var pts = [], curves = [], legend = [];
+    res.samples.forEach(function (s, i) {
+      var c = PALETTE[i % PALETTE.length];
+      data.radii.forEach(function (r, k) { if (data.columns[s.sample][k] > 0) pts.push({ x: r, y: data.columns[s.sample][k], c: c }); });
+      var arr = [], n = 200;
+      for (var t = 0; t <= n; t++) {
+        var x = xlo + (xhi - xlo) * t / n;
+        arr.push({ x: x, y: ZR.forwardThermo([x], s.T_K, res.r0, res.Q, res.d0Model)[0] });
+      }
+      curves.push({ pts: arr, c: c });
+      legend.push({ c: c, label: s.sample + '  T = ' + fx(s.T_C, 1) + ' °C' });
+    });
+    drawMainChart($('m3_chart'), {
+      points: pts, curves: curves, xRange: [xlo, xhi], legend: legend,
+      boxes: ['模型 Q = ' + res.Q + '，r₀ = ' + res.r0 + ' Å',
+        'D₀(T) = ' + res.d0Label]
+    });
+    var rp = [];
+    res.samples.forEach(function (s, i) {
+      var c = PALETTE[i % PALETTE.length];
+      data.radii.forEach(function (r, k) {
+        var ob = data.columns[s.sample][k], dc = s.pred[k];
+        if (ob > 0 && dc > 0) rp.push({ x: r, r: Math.log10(ob) - Math.log10(dc), c: c });
+      });
+    });
+    drawResidChart($('m3_resid'), rp, 'Δlog₁₀D = log₁₀D_obs − log₁₀D_calc', [0.1, 0.2], '参考线 ±0.1 / ±0.2 dex');
+  }
+
+  /* ============================================================== 导出 */
+  function exportCSV(pfx) {
+    var st = ST[pfx], res = st.res;
+    if (!res) return;
+    var rows = [];
+    if (pfx === 'm3') {
+      rows.push(['样品', 'T (K)', '± 1σ (K)', 'T (°C)', '± 1σ (°C)', 'RMS(log10D)', '最大|Δlog10D|', 'dof']);
+      res.samples.forEach(function (s) {
+        var mxr = 0;
+        st.data.radii.forEach(function (_, k) {
+          var ob = st.data.columns[s.sample][k], dc = s.pred[k];
+          if (ob > 0 && dc > 0) mxr = Math.max(mxr, Math.abs(Math.log10(ob) - Math.log10(dc)));
+        });
+        rows.push([s.sample, fx(s.T_K, 3), fx(s.dT_K, 3), fx(s.T_C, 3), fx(s.dT_K, 3), fx(s.stats.rms_log, 5), fx(mxr, 5), s.fit.dof]);
+      });
+      rows.push([]);
+      rows.push(['模型参数', 'Q=' + res.Q, 'r0=' + res.r0, 'D0(T)=' + res.d0Label]);
+      rows.push([]);
+      rows.push(['#', 'ri (Å)'].concat(st.data.headers.map(function (n) { return n + ' 实测'; })));
+      st.data.radii.forEach(function (r, i) {
+        rows.push([i + 1, r.toFixed(4)].concat(st.data.headers.map(function (n) { return fx(st.data.columns[n][i], 6); })));
+      });
+      rows.push([]);
+      rows.push(['#', 'ri (Å)'].concat(res.samples.map(function (s) { return s.sample + ' 计算'; })));
+      st.data.radii.forEach(function (r, i) {
+        rows.push([i + 1, r.toFixed(4)].concat(res.samples.map(function (s) { return fx(s.pred[i], 6); })));
+      });
+      download('REE温度计结果_' + fileStamp() + '.csv', toCSV(rows), 'text/csv;charset=utf-8');
+      return;
+    }
+    var cond = pfx === 'm1'
+      ? [['T (°C)', fx($('m1_T').value, 2)], ['P (GPa)', fmtP(Number($('m1_P').value))], ['误差含义', errLabel('m1')]]
+      : [['T (°C)', fx($('m2_T').value, 2)], ['P (GPa)', fmtP(Number($('m2_P').value))], ['Q', fx($('m2_Q').value, 0)], ['误差含义', errLabel('m2')]];
+    rows.push(['参数', '估计值', '± 1σ', '单位']);
+    if (pfx === 'm1') {
+      rows.push(['D0', fx(res.D0, 4), fx(res.dD0, 4), '']);
+      rows.push(['r0', fx(res.r0, 5), fx(res.dr0, 5), 'Å']);
+      rows.push(['E', fx(res.E_GPa, 2), fx(res.dE_GPa, 2), 'GPa']);
+      rows.push(['E_fit（内部形状参数）', fx(res.Efit, 6), fx(res.dEfit, 6), '']);
+    } else {
+      rows.push(['D0', fx(res.D0, 4), fx(res.dD0, 4), '']);
+      rows.push(['r0', fx(res.r0, 5), fx(res.dr0, 5), 'Å']);
+      rows.push(['E（由 Q 推出）', fx(res.E_GPa, 2), fx(res.dE_GPa, 2), 'GPa']);
+    }
+    rows.push([]);
+    rows.push(['统计量', '数值']);
+    rows.push(['N', st.data.rows.length]);
+    rows.push(['dof', res.fit.dof]);
+    rows.push(['加权 χ²', fx(res.fit.ssr, 6)]);
+    rows.push(['χ²/dof', fx(res.fit.chi2red, 6)]);
+    rows.push(['RMSWD', fx(Math.sqrt(res.fit.ssr / st.data.rows.length), 6)]);
+    rows.push(['R²(log10D)', fx(res.stats.r2_log, 6)]);
+    rows.push(['RMS(log10D)', fx(res.stats.rms_log, 6)]);
+    rows.push([]);
+    cond.forEach(function (c) { rows.push(c); });
+    rows.push([]);
+    rows.push(['#', '元素', 'ri (Å)', 'D 实测', '1σ', 'D 计算', '加权残差', 'log10D 残差']);
+    st.data.rows.forEach(function (r, i) {
+      rows.push([i + 1, r.el, r.ri.toFixed(4), fx(r.di, 8), fx(r.s1, 8), fx(res.pred[i], 8),
+        fx((r.di - res.pred[i]) / (res.sigmaMode.sigma[i] || 1), 4),
+        fx(Math.log10(r.di) - Math.log10(res.pred[i]), 4)]);
+    });
+    download((pfx === 'm1' ? '自由拟合结果_' : '约束拟合结果_') + fileStamp() + '.csv', toCSV(rows), 'text/csv;charset=utf-8');
+  }
+  function fileStamp() {
+    var d = new Date(), p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '_' + p(d.getHours()) + p(d.getMinutes());
+  }
+  function exportJSON(pfx) {
+    var st = ST[pfx], res = st.res;
+    if (!res) return;
+    var o = {
+      tool: TOOL, version: VER, generated: stamp(), module: res.module,
+      input: pfx === 'm3'
+        ? { radii: st.data.radii, columns: st.data.columns, Q: res.Q, r0: res.r0, d0Model: res.d0Model }
+        : {
+          T_C: Number($(pfx + '_T').value), P_GPa: Number($(pfx + '_P').value),
+          Q: pfx === 'm2' ? Number($(pfx + '_Q').value) : undefined,
+          errMode: $(pfx + '_errmode').value,
+          absoluteSigma: $(pfx + '_abs').value === 'abs1',
+          data: st.data.rows
+        },
+      result: {}, solver: {
+        algorithm: 'bounded Levenberg-Marquardt + Gauss-Newton polish (analytic Jacobian)',
+        convergence: res.fit ? { iters: res.fit.iters, reason: res.fit.reason, optimalityVerified: res.fit.optimalityVerified, maxSSRimprove: res.fit.maxImprove, windowRel: res.fit.optWindow } : undefined
+      },
+      provenance: '算法移植自 Streicher et al. (2023, GCA 346, 54-64) 配套代码'
+    };
+    if (pfx === 'm3') {
+      o.result.samples = res.samples.map(function (s) {
+        return { sample: s.sample, T_K: s.T_K, dT_K: s.dT_K, T_C: s.T_C, chi2red: s.fit.chi2red, rms_log: s.stats.rms_log, dof: s.fit.dof };
+      });
+    } else {
+      o.result = {
+        D0: res.D0, dD0: res.dD0, r0: res.r0, dr0: res.dr0, E_GPa: res.E_GPa, dE_GPa: res.dE_GPa,
+        chi2: res.fit.ssr, dof: res.fit.dof, chi2red: res.fit.chi2red,
+        r2_log: res.stats.r2_log, rms_log: res.stats.rms_log
+      };
+      if (pfx === 'm1') { o.result.E_fit = res.Efit; o.result.E_conv_factor = res.conv; }
+      o.points = st.data.rows.map(function (r, i) {
+        return { element: r.el, ri: r.ri, D_obs: r.di, sigma: r.s1, D_calc: res.pred[i] };
+      });
+    }
+    download((pfx === 'm1' ? '自由拟合' : (pfx === 'm2' ? '约束拟合' : '温度计')) + '_' + fileStamp() + '.json', JSON.stringify(o, null, 2), 'application/json');
+  }
+  function copyReport(pfx) {
+    var txt = $(pfx + '_report').textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () { setStatus('已复制结果到剪贴板', 'ok'); },
+        function () { fallbackCopy(txt); });
+    } else fallbackCopy(txt);
+  }
+  function fallbackCopy(txt) {
+    var ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); setStatus('已复制结果', 'ok'); } catch (e) { setStatus('复制失败，请手工选择文本', 'warn'); }
+    ta.remove();
+  }
+  function exportPNG(pfx) {
+    var main = $(pfx + '_chart'), resid = $(pfx + '_resid');
+    if (!main.width) return;
+    var pad = 16;
+    var W = Math.max(main.width, resid.width) + pad * 2;
+    var H = main.height + resid.height + pad * 3;
+    var c = document.createElement('canvas');
+    c.width = W; c.height = H;
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = cssVar('--panel'); ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = cssVar('--text'); ctx.font = '600 15px -apple-system, "Segoe UI", "Microsoft YaHei"';
+    ctx.fillText(TOOL + ' · ' + (pfx === 'm1' ? '自由晶格应变拟合' : pfx === 'm2' ? '约束拟合（锆石）' : 'REE 温度计') + ' · ' + stamp(), pad, pad + 6);
+    ctx.drawImage(main, pad, pad + 18);
+    ctx.drawImage(resid, pad, pad + 18 + main.height + pad);
+    c.toBlob(function (b) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(b);
+      a.download = (pfx === 'm3' ? '温度计图表_' : '拟合图表_') + fileStamp() + '.png';
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    });
+  }
+
+  /* ============================================================ 事件绑定 */
+  var timers = {};
+  function debounce(key, fn, ms) {
+    clearTimeout(timers[key]);
+    timers[key] = setTimeout(fn, ms || 220);
+  }
+  function bindPane(pfx, compute) {
+    var ta = textareaOf(pfx);
+    // 内容变化 -> 重新自动识别列映射；手工改下拉框则保留用户选择
+    ta.addEventListener('input', function () { ST[pfx].maps.inited = false; debounce(pfx, compute); });
+    ['mapEl', 'mapRi', 'mapDi', 'mapS'].forEach(function (k) {
+      var el = $(pfx + '_' + k);
+      if (el) el.addEventListener('change', function () { ST[pfx].maps.inited = true; compute(); });
+    });
+    ['T', 'P', 'Q', 'r0', 'errmode', 'abs', 'd0'].forEach(function (k) {
+      var el = $(pfx + '_' + k);
+      if (el) el.addEventListener('change', compute);
+    });
+    var calc = $(pfx + '_calc');
+    if (calc) calc.addEventListener('click', compute);
+    var clr = $(pfx + '_clear');
+    if (clr) clr.addEventListener('click', function () { ta.value = ''; ST[pfx].maps.inited = false; compute(); });
+    var dl = $(pfx + '_demo1'), d2 = $(pfx + '_demo2');
+    if (dl) dl.addEventListener('click', function () { loadDemo(pfx, 'lattice'); });
+    if (d2) d2.addEventListener('click', function () { loadDemo(pfx, 'synth'); });
+    var fr = $(pfx + '_fillri');
+    if (fr) fr.addEventListener('click', function () { fillRadii(pfx, compute); });
+    var rt = $(pfx + '_readTP');
+    if (rt) rt.addEventListener('click', function () { readTP(pfx, compute); });
+    var cp = $(pfx + '_copy'); if (cp) cp.addEventListener('click', function () { copyReport(pfx); });
+    var cs = $(pfx + '_csv'); if (cs) cs.addEventListener('click', function () { exportCSV(pfx); });
+    var js = $(pfx + '_json'); if (js) js.addEventListener('click', function () { exportJSON(pfx); });
+    var pn = $(pfx + '_png'); if (pn) pn.addEventListener('click', function () { exportPNG(pfx); });
+    var pr = $(pfx + '_print'); if (pr) pr.addEventListener('click', function () { window.print(); });
+    bindDrop(pfx, compute);
+  }
+  function bindDrop(pfx, compute) {
+    var zone = $(pfx + '_drop'), input = $(pfx + '_file');
+    if (!zone || !input) return;
+    zone.addEventListener('click', function () { input.click(); });
+    input.addEventListener('change', function () { if (input.files[0]) loadFile(pfx, input.files[0], compute); input.value = ''; });
+    ['dragenter', 'dragover'].forEach(function (ev) {
+      zone.addEventListener(ev, function (e) { e.preventDefault(); zone.classList.add('hot'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+      zone.addEventListener(ev, function (e) { e.preventDefault(); zone.classList.remove('hot'); });
+    });
+    zone.addEventListener('drop', function (e) {
+      var f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) loadFile(pfx, f, compute);
+    });
+  }
+  function loadDemo(pfx, kind) {
+    var ta = textareaOf(pfx);
+    if (kind === 'lattice') {
+      ta.value = 'Element\tri\tDi\t1s\tT [C]\tP [GPa]\n' + DEMO_LATTICE.rows.map(function (r) {
+        return [r.el, r.ri.toFixed(3), r.di, r.s1, DEMO_LATTICE.T_C, DEMO_LATTICE.P_GPa].join('\t');
+      }).join('\n');
+      if ($(pfx + '_T')) $(pfx + '_T').value = DEMO_LATTICE.T_C;
+      if ($(pfx + '_P')) $(pfx + '_P').value = DEMO_LATTICE.P_GPa;
+      setStatus('已载入示例：' + DEMO_LATTICE.name, 'ok');
+    } else if (kind === 'synth') {
+      ta.value = 'Element\tri\tDi\t1s\n' + DEMO_SYNTH.rows.map(function (r) {
+        return [r.el, r.ri.toFixed(3), r.di.toPrecision(8), r.s1.toPrecision(6)].join('\t');
+      }).join('\n');
+      if ($(pfx + '_T')) $(pfx + '_T').value = DEMO_SYNTH.T_C;
+      setStatus('已载入示例：' + DEMO_SYNTH.name + '（真值 D₀=' + DEMO_SYNTH.truth.D0 + '，r₀=' + DEMO_SYNTH.truth.r0 + '，E=' + DEMO_SYNTH.truth.E_GPa + ' GPa）', 'ok');
+    } else {
+      var cols = Object.keys(DEMO_PARTITION.columns);
+      ta.value = 'Radii\t' + cols.join('\t') + '\n' + DEMO_PARTITION.radii.map(function (r, i) {
+        return [r.toFixed(3)].concat(cols.map(function (c) { return DEMO_PARTITION.columns[c][i]; })).join('\t');
+      }).join('\n');
+      setStatus('已载入示例：' + DEMO_PARTITION.name, 'ok');
+    }
+    ST[pfx].maps.inited = false;
+    var fn = { m1: computeM1, m2: computeM2, m3: computeM3 }[pfx];
+    fn();
+  }
+  function loadFile(pfx, file, compute) {
+    var name = file.name.toLowerCase();
+    var cb = function (text) {
+      textareaOf(pfx).value = text;
+      ST[pfx].maps.inited = false;
+      compute();
+      setStatus('已读取 ' + file.name + '（' + text.split('\n').filter(function (l) { return l.trim(); }).length + ' 行）', 'ok');
+    };
+    var ta = textareaOf(pfx), ul = $(pfx + '_msgs');
+    if (/\.(xlsx|xlsm)$/.test(name)) {
+      file.arrayBuffer().then(function (buf) {
+        return xlsxToTSV(new Uint8Array(buf));
+      }).then(cb).catch(function (e) {
+        ul.innerHTML = '<li class="e">' + esc('xlsx 读取失败：' + e.message) + '</li>';
+        ul.insertAdjacentHTML('beforeend', '<li class="i">可在 Excel 中"另存为 CSV UTF-8"后重新拖入。</li>');
+      });
+    } else if (/\.xls$/.test(name)) {
+      ul.innerHTML = '<li class="e">旧版 .xls 不支持，请在 Excel 中另存为 .xlsx 或 .csv。</li>';
+    } else {
+      var rd = new FileReader();
+      rd.onload = function () { cb(String(rd.result).replace(/^\ufeff/, '')); };
+      rd.readAsText(file, 'utf-8');
+    }
+  }
+  function fillRadii(pfx, compute) {
+    var t = ST[pfx].table, s = ST[pfx].maps;
+    if (!t.rows.length) return;
+    var map = R_SHANNON_VIII.radii;
+    if (pfx === 'm3') {
+      // 表头是元素名：把半径列填成 Shannon 值
+      var head = t.colNames[s.ri];
+      var v = map[String(head).replace(/[0-9+\s]/g, '')];
+      if (v == null) { setStatus('无法从表头「' + head + '」识别元素', 'warn'); return; }
+      var lines = textareaOf(pfx).value.split('\n');
+      // 简单替换：把「表头行」改成 半径 值写进数据（不改名，只提示）
+      setStatus('表头「' + head + '」对应 Shannon VIII 半径 ' + v + ' Å —— 请直接把该列数值改为 ' + v, 'warn');
+      return;
+    }
+    if (s.el < 0) { setStatus('需要先指定元素列', 'warn'); return; }
+    var lines2 = textareaOf(pfx).value.replace(/\r\n?/g, '\n').split('\n');
+    var delim = (lines2[0].match(/\t/g) || []).length ? '\t' : ((lines2[0].match(/,/g) || []).length ? ',' : null);
+    var hasHeader = t.header !== null;
+    var start = hasHeader ? 1 : 0, filled = 0, unknown = [];
+    var out = [];
+    var bodyIdx = 0;
+    for (var i = 0; i < lines2.length; i++) {
+      if (i < start || lines2[i].trim() === '') { out.push(lines2[i]); continue; }
+      var cells = delim === null ? lines2[i].trim().split(/\s+/) : splitCSV(lines2[i], delim);
+      var el = String(cells[s.el] || '').trim().replace(/[0-9+\s]/g, '');
+      var key = el.charAt(0).toUpperCase() + el.slice(1).toLowerCase();
+      if (map[key] != null) {
+        var need = cells.length;
+        while (cells.length <= s.ri) cells.push('');
+        cells[s.ri] = String(map[key]);
+        filled++;
+      } else if (el) unknown.push(el);
+      out.push(delim === null ? cells.join('\t') : cells.join(delim));
+      bodyIdx++;
+    }
+    textareaOf(pfx).value = out.join('\n');
+    ST[pfx].maps.inited = false;
+    compute();
+    setStatus('已按 Shannon VIII 半径补全 ' + filled + ' 行' + (unknown.length ? '（未识别：' + unknown.join('/') + '）' : ''), unknown.length ? 'warn' : 'ok');
+  }
+  function readTP(pfx, compute) {
+    var t = ST[pfx].table, s = ST[pfx].maps;
+    var got = [];
+    if (s.tCol >= 0) {
+      for (var i = 0; i < t.rows.length; i++) {
+        var v = numCell(t.rows[i][s.tCol]);
+        if (v !== null) { $(pfx + '_T').value = v; got.push('T=' + v + ' °C'); break; }
+      }
+    }
+    if (s.pCol >= 0 && $(pfx + '_P')) {
+      for (var k = 0; k < t.rows.length; k++) {
+        var v2 = numCell(t.rows[k][s.pCol]);
+        if (v2 !== null) { $(pfx + '_P').value = v2; got.push('P=' + v2 + ' GPa'); break; }
+      }
+    }
+    setStatus(got.length ? '已从表格读取 ' + got.join('，') : '表格里未找到 T [C] / P [GPa] 列', got.length ? 'ok' : 'warn');
+    compute();
+  }
+
+  /* ============================================================== 自检 */
+  var SELFTEST_REFS = {
+    free: { D0: 3.468870, r0: 0.956220, E: 614.4841 },
+    con6489: { D0: 3.155339, r0: 0.947240, E: 514.8190 },
+    con7827: { D0: 3.467523, r0: 0.956179, E: 613.8711 },
+    thermo: { '6489_0.93_streicher2023': { 'D(Sample 1)': 966.0260, 'D(Sample 2)': 951.4242 } }
+  };
+  function runSelfTest() {
+    var out = [], pass = 0, fail = 0;
+    function T(tag, got, want, tol) {
+      var rel = Math.abs(got - want) / Math.max(Math.abs(want), 1e-300);
+      if (rel <= tol) { pass++; out.push('  ✓ ' + tag + '   ' + got + '  (rel ' + rel.toExponential(1) + ')'); }
+      else { fail++; out.push('  ✗ ' + tag + '   got=' + got + ' want=' + want + ' rel=' + rel.toExponential(2)); }
+    }
+    try {
+      var ri = DEMO_LATTICE.rows.map(function (r) { return r.ri; });
+      var di = DEMO_LATTICE.rows.map(function (r) { return r.di; });
+      var s1 = DEMO_LATTICE.rows.map(function (r) { return r.s1; });
+      var f1 = ZR.fitFree({ ri: ri, di: di, s1: s1, T_C: DEMO_LATTICE.T_C, errMode: 'abs', absoluteSigma: true });
+      T('自由拟合 D0', f1.D0, SELFTEST_REFS.free.D0, 1e-6);
+      T('自由拟合 r0', f1.r0, SELFTEST_REFS.free.r0, 1e-6);
+      T('自由拟合 E(GPa)', f1.E_GPa, SELFTEST_REFS.free.E, 1e-6);
+      out.push('    最优性验证: ' + (f1.fit.optimalityVerified ? '通过' : '未通过') + '，最大 SSR 改进 ' + f1.fit.maxImprove.toExponential(1));
+      f1.fit.optimalityVerified ? pass++ : fail++;
+
+      var f2 = ZR.fitConstrained({ ri: ri, di: di, s1: s1, T_C: DEMO_LATTICE.T_C, Q: 6489, errMode: 'abs', absoluteSigma: true });
+      T('约束拟合 Q₁ D0', f2.D0, SELFTEST_REFS.con6489.D0, 1e-6);
+      T('约束拟合 Q₁ r0', f2.r0, SELFTEST_REFS.con6489.r0, 1e-6);
+      T('约束拟合 Q₁ E', f2.E_GPa, SELFTEST_REFS.con6489.E, 1e-6);
+      var f2b = ZR.fitConstrained({ ri: ri, di: di, s1: s1, T_C: DEMO_LATTICE.T_C, Q: 7827, errMode: 'abs', absoluteSigma: true });
+      T('约束拟合 Q₂ E', f2b.E_GPa, SELFTEST_REFS.con7827.E, 1e-6);
+
+      var f3 = ZR.fitThermo({
+        radii: DEMO_PARTITION.radii, columns: DEMO_PARTITION.columns, Q: 6489, r0: 0.93,
+        d0Model: 'streicher2023', absoluteSigma: false
+      });
+      var ref3 = SELFTEST_REFS.thermo['6489_0.93_streicher2023'];
+      f3.samples.forEach(function (s) { T('温度计 ' + s.sample, s.T_K, ref3[s.sample], 1e-6); });
+
+      // 正演 -> 反演闭合
+      var back = ZR.fitThermo({
+        radii: DEMO_PARTITION.radii, columns: { closed: ZR.forwardThermo(DEMO_PARTITION.radii, 1500, 0.93, 6489, 'streicher2023') },
+        Q: 6489, r0: 0.93, d0Model: 'streicher2023', absoluteSigma: false
+      });
+      T('温度计闭合 1500 K', back.samples[0].T_K, 1500, 1e-8);
+
+      // 三个面板端到端：载入示例 -> 自动计算
+      loadDemo('m1', 'lattice');
+      loadDemo('m2', 'lattice');
+      loadDemo('m3', 'thermo');
+
+      // 每个标签页可切换
+      var tabs = document.querySelectorAll('nav.tabs button');
+      var okTabs = 0;
+      Array.prototype.forEach.call(tabs, function (b) {
+        try { b.click(); okTabs++; } catch (e) { }
+      });
+      (okTabs === tabs.length) ? pass++ : fail++;
+      out.push('  ' + (okTabs === tabs.length ? '✓' : '✗') + ' 标签页切换 ' + okTabs + '/' + tabs.length);
+      // 回到「① 自由拟合」：图表在可见状态下才会按真实宽度重绘
+      Array.prototype.forEach.call(tabs, function (b) {
+        if (b.getAttribute('data-tab') === 'm1') b.click();
+      });
+
+      var painted = 0, asked = 0, sizes = [];
+      ['m1_chart', 'm1_resid', 'm2_chart', 'm2_resid', 'm3_chart', 'm3_resid'].forEach(function (id) {
+        asked++;
+        var c = $(id);
+        if (!c || !c.width) return;
+        var r = c.getBoundingClientRect();
+        var d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+        var nz = 0;
+        for (var i = 3; i < d.length; i += 4 * 97) if (d[i] !== 0) nz++;
+        if (nz > 20) { painted++; sizes.push(id + ' ' + Math.round(r.width) + '×' + Math.round(r.height) + ' css/' + c.width + '×' + c.height + ' px'); }
+        else sizes.push(id + ' 空白');
+      });
+      (painted === asked) ? pass++ : fail++;
+      out.push('  ' + (painted === asked ? '✓' : '✗') + ' 图表已绘制 ' + painted + '/' + asked + '  [' + sizes.join('; ') + ']');
+
+      var rep1 = $('m1_report').textContent, rep3 = $('m3_report').textContent;
+      var okRep = rep1.indexOf('D₀') >= 0 && rep1.indexOf('E') >= 0 && rep3.indexOf('T (K)') >= 0;
+      okRep ? pass++ : fail++;
+      out.push('  ' + (okRep ? '✓' : '✗') + ' 结果文本已生成');
+
+      // 数值表与图表一致性：拟合值 = 模型重算值
+      var st = ST.m1.res, mx = 0;
+      st.rows.forEach(function (r, i) { mx = Math.max(mx, Math.abs(ZR.MODEL_FREE.eval(r.ri, st.fit.p) - st.pred[i])); });
+      (mx === 0) ? pass++ : fail++;
+      out.push('  ' + (mx === 0 ? '✓' : '✗') + ' 图表与结果表数值一致（最大差 ' + mx + '）');
+    } catch (e) {
+      fail++;
+      out.push('  ✗ 自检抛异常: ' + (e && e.message));
+    }
+    var head = (fail === 0 ? 'SELFTEST PASS ' : 'SELFTEST FAIL ') + pass + '/' + (pass + fail);
+    document.title = head;
+    var div = $('selftestOut');
+    if (div) div.innerHTML = '<b>' + head + '</b>\n' + esc(out.join('\n'));
+    setStatus(head, fail === 0 ? 'ok' : 'err');
+    return { pass: pass, fail: fail, log: out.join('\n') };
+  }
+
+  /* ================================================================ 启动 */
+  function init() {
+    ST.m1 = { table: { rows: [], nCol: 0, colNames: [] }, maps: { inited: false }, res: null };
+    ST.m2 = { table: { rows: [], nCol: 0, colNames: [] }, maps: { inited: false }, res: null };
+    ST.m3 = { table: { rows: [], nCol: 0, colNames: [] }, maps: { inited: false }, res: null };
+
+    Array.prototype.forEach.call(document.querySelectorAll('nav.tabs button'), function (b) {
+      b.addEventListener('click', function () {
+        Array.prototype.forEach.call(document.querySelectorAll('nav.tabs button'), function (x) { x.classList.remove('active'); });
+        Array.prototype.forEach.call(document.querySelectorAll('.pane'), function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        $('pane-' + b.getAttribute('data-tab')).classList.add('active');
+        // 切换后重画（canvas 在隐藏时测量宽度会得到 0）
+        var p = b.getAttribute('data-tab');
+        if (p === 'm1' && ST.m1.res) drawM1Charts(ST.m1.res, ST.m1.data);
+        if (p === 'm2' && ST.m2.res) drawM2Charts(ST.m2.res, ST.m2.data, Number($('m2_Q').value));
+        if (p === 'm3' && ST.m3.res) drawM3Charts(ST.m3.res, ST.m3.data);
+        try { window.scrollTo(0, 0); } catch (e) { }
+      });
+    });
+    // 总览页的「开始 →」按钮
+    Array.prototype.forEach.call(document.querySelectorAll('[data-goto]'), function (btn) {
+      btn.addEventListener('click', function () {
+        var want = btn.getAttribute('data-goto');
+        Array.prototype.forEach.call(document.querySelectorAll('nav.tabs button'), function (b) {
+          if (b.getAttribute('data-tab') === want) b.click();
+        });
+      });
+    });
+    $('btnTheme').addEventListener('click', function () {
+      document.body.classList.toggle('light');
+      ['m1', 'm2', 'm3'].forEach(function (p) {
+        var st = ST[p];
+        if (st.res && st.data) {
+          if (p === 'm1') drawM1Charts(st.res, st.data);
+          if (p === 'm2') drawM2Charts(st.res, st.data, Number($('m2_Q').value));
+          if (p === 'm3') drawM3Charts(st.res, st.data);
+        }
+      });
+    });
+    $('btnSelftest').addEventListener('click', runSelfTest);
+    $('btnSelftest2').addEventListener('click', runSelfTest);
+
+    bindPane('m1', computeM1);
+    bindPane('m2', computeM2);
+    bindPane('m3', computeM3);
+
+    // 初始载入示例，让用户一打开就能看到可用的结果
+    loadDemo('m1', 'lattice');
+    loadDemo('m2', 'lattice');
+    loadDemo('m3', 'thermo');
+    var h = location.hash || '';
+    if (h.indexOf('tab=') >= 0) {
+      var want = /tab=(\w+)/.exec(h)[1];
+      Array.prototype.forEach.call(document.querySelectorAll('nav.tabs button'), function (b) {
+        if (b.getAttribute('data-tab') === want) b.click();
+      });
+    }
+    if (h.indexOf('selftest') >= 0) setTimeout(runSelfTest, 60);
+    else setStatus('就绪 · 已载入示例数据', 'ok');
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+
+  window.__ZRAPP = { runSelfTest: runSelfTest, ST: ST };
+})();
+</script>
+<!-- 本文件由 webgui/build.py 从 webgui/src/* 生成，请勿直接编辑；改源码后重新运行 python webgui/build.py -->
+</body>
+</html>

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>锆石–熔体 REE 分配系数工具</title>
+<style>/*@STYLE@*/</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo">Zr</div>
+      <div>
+        <h1>锆石–熔体 REE 分配系数工具</h1>
+        <p class="sub">贴数据 · 点计算 · 拿结果 —— 全程离线，数据不上传</p>
+      </div>
+    </div>
+    <div class="hdr-actions">
+      <span class="pill" id="statusPill">就绪</span>
+      <button id="btnSelftest" title="运行内置数值自检">自检</button>
+      <button id="btnTheme" title="切换深浅主题">主题</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="ov">总览 · 流程</button>
+    <button class="tab" data-tab="m1">① 自由拟合</button>
+    <button class="tab" data-tab="m2">② 约束拟合</button>
+    <button class="tab" data-tab="m3">③ REE 温度计</button>
+    <button class="tab" data-tab="about">原理与校验</button>
+  </nav>
+
+  <main>
+    <!-- ==================================================== 总览·流程 -->
+    <section class="pane active" id="pane-ov">
+      <div class="card">
+        <h2>整个工具就五步</h2>
+        <div class="body">
+          <div class="flow">
+            <div class="stage"><div class="n">STEP 1</div><div class="t">准备数据</div>
+              <div class="d">Excel 复制粘贴，或拖入 .xlsx / .csv</div></div>
+            <div class="arw">→</div>
+            <div class="stage"><div class="n">STEP 2</div><div class="t">选算法</div>
+              <div class="d">① 自由拟合　② 约束拟合　③ 温度计</div></div>
+            <div class="arw">→</div>
+            <div class="stage"><div class="n">STEP 3</div><div class="t">点「计算」</div>
+              <div class="d">加权最小二乘拟合，自动给 ±1σ</div></div>
+            <div class="arw">→</div>
+            <div class="stage"><div class="n">STEP 4</div><div class="t">看结果</div>
+              <div class="d">参数值 ± 误差、拟合图、残差图、χ²/dof</div></div>
+            <div class="arw">→</div>
+            <div class="stage"><div class="n">STEP 5</div><div class="t">拿走</div>
+              <div class="d">复制文本 · CSV · JSON · PNG · 打印/PDF</div></div>
+          </div>
+          <p class="hint" style="margin-top:12px">数据只在你的浏览器里算；xlsx 也在这里解压解析，不经过任何服务器。</p>
+        </div>
+      </div>
+
+      <h3 class="sech">我该用哪个？</h3>
+      <div class="pick">
+        <div class="card pick-card">
+          <div class="body">
+            <div class="ptag">① 自由拟合</div>
+            <p class="pd">想从一批分配系数里<b>同时求出</b> D₀、r₀、E（任意矿物–熔体体系）。</p>
+            <div class="io"><b>输入</b><span>元素 / ri / Di / 1s　+　温度 T、压力 P</span></div>
+            <div class="io"><b>得到</b><span>D₀ ± 1σ　r₀ ± 1σ (Å)　E ± 1σ (GPa)</span></div>
+            <button class="primary" data-goto="m1">开始 →</button>
+          </div>
+        </div>
+        <div class="card pick-card">
+          <div class="body">
+            <div class="ptag">② 约束拟合（锆石）</div>
+            <p class="pd">锆石专用：E 与 r₀ 由 Q 约束绑定，只拟合 D₀、r₀。</p>
+            <div class="io"><b>输入</b><span>元素 / ri / Di / 1s　+　温度 T、Q（Q₁ 或 Q₂）</span></div>
+            <div class="io"><b>得到</b><span>D₀ ± 1σ　r₀ ± 1σ (Å)　E (GPa，由 Q 推出)</span></div>
+            <button class="primary" data-goto="m2">开始 →</button>
+          </div>
+        </div>
+        <div class="card pick-card">
+          <div class="body">
+            <div class="ptag">③ REE 温度计</div>
+            <p class="pd">已知锆石–熔体 REE 分配系数，<b>反演结晶温度</b>。可一次算多个样品。</p>
+            <div class="io"><b>输入</b><span>ri 一列　+　每个样品一列 D（表头写样品名）</span></div>
+            <div class="io"><b>得到</b><span>每个样品的 T ± 1σ（K 与 °C）、χ²/dof、散点+拟合曲线图</span></div>
+            <button class="primary" data-goto="m3">开始 →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>三步上手</h2>
+        <div class="body">
+          <ol class="steps">
+            <li>点上面任意一个<b>「开始 →」</b>（或在顶部切换标签页）。</li>
+            <li>已自动载入示例数据并算好结果 —— 想用自己的数据，就把表格<b>粘贴</b>进左侧输入框，或直接<b>拖入 xlsx</b>。</li>
+            <li>结果与图会立刻刷新；右上角可<b>复制结果</b>、导出 CSV / JSON / PNG，或打印成 PDF。</li>
+          </ol>
+          <p class="hint">表头能自动识别（Element / ri / Di / 1s / T / P）；认错了可以展开左侧「高级设置」手动指定列。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================== ① 自由拟合 -->
+    <section class="pane" id="pane-m1">
+      <div class="strip">
+        <div class="in"><b>你要输入</b><span>表格：元素 · ri (Å) · Di · 1s（可从 Excel 粘贴）</span><span>温度 T (°C)、压力 P (GPa)</span></div>
+        <div class="sep">→</div>
+        <div class="out"><b>你将得到</b><span>D₀ ± 1σ、r₀ ± 1σ (Å)、E ± 1σ (GPa)</span><span>拟合图 + 残差图 + χ²/dof、R²</span></div>
+      </div>
+      <div class="cols">
+        <div class="col input">
+          <div class="card">
+            <h2>1 · 输入数据</h2>
+            <div class="body">
+              <div class="row between">
+                <div class="row">
+                  <button class="tiny" id="m1_demo1">示例：Burnham 2012</button>
+                  <button class="tiny" id="m1_demo2">示例：合成数据</button>
+                </div>
+                <button class="tiny" id="m1_clear">清空</button>
+              </div>
+              <div class="drop" id="m1_drop">拖入 .xlsx / .csv / .txt，或点击选择<input type="file" id="m1_file" accept=".xlsx,.csv,.tsv,.txt" hidden></div>
+              <textarea id="m1_data" spellcheck="false" placeholder="Element&#9;ri&#9;Di&#9;1s&#10;La&#9;1.160&#9;0.0015&#9;0.0014"></textarea>
+              <div class="row" style="margin-top:8px">
+                <button class="tiny" id="m1_fillri">只有元素名？补全 ri</button>
+              </div>
+              <ul class="msgs" id="m1_msgs"></ul>
+            </div>
+            <div class="body">
+              <details class="adv">
+                <summary>高级设置（列映射 / 误差含义 / 从表格读 T·P）</summary>
+                <div class="advbody">
+                  <div class="grid3">
+                    <div><label class="f">元素列</label><select id="m1_mapEl"></select></div>
+                    <div><label class="f">离子半径 ri (Å)</label><select id="m1_mapRi"></select></div>
+                    <div><label class="f">分配系数 D</label><select id="m1_mapDi"></select></div>
+                  </div>
+                  <div class="grid2" style="margin-top:10px">
+                    <div><label class="f">误差列 1σ</label><select id="m1_mapS"></select></div>
+                    <div><label class="f">误差含义</label><select id="m1_errmode">
+                      <option value="abs">绝对 1σ（原脚本默认）</option>
+                      <option value="pct">相对百分数 %</option>
+                      <option value="none">不加权（σ=1）</option>
+                    </select></div>
+                  </div>
+                  <div class="row" style="margin-top:10px">
+                    <button class="tiny" id="m1_readTP">从表格读 T / P</button>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </div>
+          <div class="card">
+            <h2>2 · 拟合条件</h2>
+            <div class="body">
+              <div class="grid3">
+                <div><label class="f">温度 T (°C)</label><input type="number" id="m1_T" value="1295"></div>
+                <div><label class="f">压力 P (GPa)</label><input type="number" id="m1_P" value="0" step="0.5"></div>
+                <div><label class="f">误差标度</label><select id="m1_abs">
+                  <option value="abs1">绝对 1σ（原脚本）</option>
+                  <option value="scaled">按 χ² 缩放</option>
+                </select></div>
+              </div>
+              <div class="row" style="margin-top:12px">
+                <button class="primary big" id="m1_calc">计算</button>
+                <span class="pill" id="m1_badge">—</span>
+              </div>
+              <p class="hint">P 不参与计算，只作图注（与原脚本一致）。<code>absolute_sigma</code> 含义见「原理与校验」。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="card">
+            <h2>3 · 结果</h2>
+            <div class="body"><div class="bigvals" id="m1_bigvals"></div></div>
+            <div class="body">
+              <div class="row between">
+                <span class="hint">格式化结果（可直接贴进论文 / 表格）</span>
+                <span class="row">
+                  <button class="tiny" id="m1_copy">复制</button>
+                  <button class="tiny" id="m1_csv">CSV</button>
+                  <button class="tiny" id="m1_json">JSON</button>
+                  <button class="tiny" id="m1_png">PNG</button>
+                  <button class="tiny" id="m1_print">打印</button>
+                </span>
+              </div>
+              <pre class="report" id="m1_report">等待计算…</pre>
+            </div>
+            <div class="body">
+              <details class="adv">
+                <summary>详细统计量与逐点数据</summary>
+                <div class="advbody scroll tall" id="m1_stats"></div>
+              </details>
+            </div>
+          </div>
+          <div class="card">
+            <h2>4 · 图</h2>
+            <div class="chartwrap"><canvas id="m1_chart" data-h="420"></canvas></div>
+            <div class="chartwrap" style="padding-top:0"><canvas id="m1_resid" data-h="180"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================================================== ② 约束拟合 -->
+    <section class="pane" id="pane-m2">
+      <div class="strip">
+        <div class="in"><b>你要输入</b><span>表格：元素 · ri (Å) · Di · 1s</span><span>温度 T (°C)、约束常数 Q</span></div>
+        <div class="sep">→</div>
+        <div class="out"><b>你将得到</b><span>D₀ ± 1σ、r₀ ± 1σ (Å)、E (GPa)</span><span>拟合图 + 残差图 + χ²/dof、R²</span></div>
+      </div>
+      <div class="cols">
+        <div class="col input">
+          <div class="card">
+            <h2>1 · 输入数据</h2>
+            <div class="body">
+              <div class="row between">
+                <button class="tiny" id="m2_demo1">示例：Burnham 2012</button>
+                <button class="tiny" id="m2_clear">清空</button>
+              </div>
+              <div class="drop" id="m2_drop">拖入 .xlsx / .csv / .txt，或点击选择<input type="file" id="m2_file" accept=".xlsx,.csv,.tsv,.txt" hidden></div>
+              <textarea id="m2_data" spellcheck="false" placeholder="Element&#9;ri&#9;Di&#9;1s"></textarea>
+              <div class="row" style="margin-top:8px">
+                <button class="tiny" id="m2_fillri">只有元素名？补全 ri</button>
+              </div>
+              <ul class="msgs" id="m2_msgs"></ul>
+            </div>
+            <div class="body">
+              <details class="adv">
+                <summary>高级设置（列映射 / 误差含义 / 从表格读 T·P）</summary>
+                <div class="advbody">
+                  <div class="grid3">
+                    <div><label class="f">元素列</label><select id="m2_mapEl"></select></div>
+                    <div><label class="f">离子半径 ri (Å)</label><select id="m2_mapRi"></select></div>
+                    <div><label class="f">分配系数 D</label><select id="m2_mapDi"></select></div>
+                  </div>
+                  <div class="grid2" style="margin-top:10px">
+                    <div><label class="f">误差列 1σ</label><select id="m2_mapS"></select></div>
+                    <div><label class="f">误差含义</label><select id="m2_errmode">
+                      <option value="abs">绝对 1σ（原脚本默认）</option>
+                      <option value="pct">相对百分数 %</option>
+                      <option value="none">不加权（σ=1）</option>
+                    </select></div>
+                  </div>
+                  <div class="row" style="margin-top:10px">
+                    <button class="tiny" id="m2_readTP">从表格读 T / P</button>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </div>
+          <div class="card">
+            <h2>2 · 约束条件</h2>
+            <div class="body">
+              <div class="grid3">
+                <div><label class="f">温度 T (°C)</label><input type="number" id="m2_T" value="1295"></div>
+                <div><label class="f">约束常数 Q</label><select id="m2_Q">
+                  <option value="6489">Q₁ = 6489</option>
+                  <option value="7827">Q₂ = 7827</option>
+                </select></div>
+                <div><label class="f">压力 P (GPa，图注)</label><input type="number" id="m2_P" value="0" step="0.5"></div>
+              </div>
+              <div class="row" style="margin-top:12px">
+                <button class="primary big" id="m2_calc">计算</button>
+                <span class="pill" id="m2_badge">—</span>
+              </div>
+              <details class="adv">
+                <summary>高级设置（误差标度）</summary>
+                <div class="advbody">
+                  <label class="f">误差标度</label><select id="m2_abs">
+                    <option value="abs1">绝对 1σ（原脚本）</option>
+                    <option value="scaled">按 χ² 缩放</option>
+                  </select>
+                </div>
+              </details>
+              <p class="hint">约束把 E 与 r₀ 绑定：<code>E = Q/(1.38+r₀)³</code>，待求参数只剩 D₀、r₀。</p>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card">
+            <h2>3 · 结果</h2>
+            <div class="body"><div class="bigvals" id="m2_bigvals"></div></div>
+            <div class="body">
+              <div class="row between">
+                <span class="hint">格式化结果</span>
+                <span class="row">
+                  <button class="tiny" id="m2_copy">复制</button>
+                  <button class="tiny" id="m2_csv">CSV</button>
+                  <button class="tiny" id="m2_json">JSON</button>
+                  <button class="tiny" id="m2_png">PNG</button>
+                  <button class="tiny" id="m2_print">打印</button>
+                </span>
+              </div>
+              <pre class="report" id="m2_report">等待计算…</pre>
+            </div>
+            <div class="body">
+              <details class="adv">
+                <summary>详细统计量与逐点数据</summary>
+                <div class="advbody scroll tall" id="m2_stats"></div>
+              </details>
+            </div>
+          </div>
+          <div class="card">
+            <h2>4 · 图</h2>
+            <div class="chartwrap"><canvas id="m2_chart" data-h="420"></canvas></div>
+            <div class="chartwrap" style="padding-top:0"><canvas id="m2_resid" data-h="180"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================================================== ③ 温度计 -->
+    <section class="pane" id="pane-m3">
+      <div class="strip">
+        <div class="in"><b>你要输入</b><span>ri 一列 + 每个样品一列 D(Zircon/Melt)</span><span>模型参数：Q、r₀、D₀(T) 关系</span></div>
+        <div class="sep">→</div>
+        <div class="out"><b>你将得到</b><span>每个样品的 T ± 1σ（K / °C）</span><span>散点+拟合曲线图、逐点偏差、χ²/dof</span></div>
+      </div>
+      <div class="cols">
+        <div class="col input">
+          <div class="card">
+            <h2>1 · 输入数据</h2>
+            <div class="body">
+              <div class="row between">
+                <button class="tiny" id="m3_demo1">示例：Partition_coefficents_data</button>
+                <button class="tiny" id="m3_clear">清空</button>
+              </div>
+              <div class="drop" id="m3_drop">拖入 .xlsx / .csv / .txt，或点击选择<input type="file" id="m3_file" accept=".xlsx,.csv,.tsv,.txt" hidden></div>
+              <textarea id="m3_data" spellcheck="false" placeholder="Radii&#9;D(Sample 1)&#9;D(Sample 2)&#10;1.160&#9;0.0103&#9;0.1187"></textarea>
+              <div class="row" style="margin-top:8px">
+                <button class="tiny" id="m3_fillri">表头是元素名？用 Shannon 半径</button>
+              </div>
+              <ul class="msgs" id="m3_msgs"></ul>
+            </div>
+            <div class="body">
+              <details class="adv">
+                <summary>高级设置（半径列 / 样品列）</summary>
+                <div class="advbody">
+                  <div class="grid2">
+                    <div><label class="f">半径列</label><select id="m3_mapRi"></select></div>
+                    <div><label class="f">识别到的样品列</label><span class="hint" id="m3_samples">—</span></div>
+                  </div>
+                </div>
+              </details>
+            </div>
+          </div>
+          <div class="card">
+            <h2>2 · 温度计模型</h2>
+            <div class="body">
+              <div class="grid2">
+                <div><label class="f">约束常数 Q</label><select id="m3_Q">
+                  <option value="6489">Q₁ = 6489</option>
+                  <option value="7827">Q₂ = 7827</option>
+                </select></div>
+                <div><label class="f">晶格位 r₀ (Å)</label><select id="m3_r0">
+                  <option value="0.93">0.93</option>
+                  <option value="0.95">0.95</option>
+                </select></div>
+              </div>
+              <div style="margin-top:10px">
+                <label class="f">D₀(T) 关系</label><select id="m3_d0">
+                  <option value="streicher2023">Streicher et al. (2022/2023)</option>
+                  <option value="rubatto2007">Rubatto &amp; Hermann (2007)</option>
+                </select>
+              </div>
+              <div class="row" style="margin-top:12px">
+                <button class="primary big" id="m3_calc">计算</button>
+                <span class="pill" id="m3_badge">—</span>
+              </div>
+              <details class="adv">
+                <summary>高级设置（误差标度）</summary>
+                <div class="advbody">
+                  <label class="f">误差标度</label><select id="m3_abs">
+                    <option value="scaled">按 χ² 缩放（原脚本默认）</option>
+                    <option value="abs1">绝对 1σ</option>
+                  </select>
+                </div>
+              </details>
+              <p class="hint">±1σ 只反映数据点分散度，不等于真实地质不确定度（详见「原理与校验」）。</p>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card">
+            <h2>3 · 结果（逐样品结晶温度）</h2>
+            <div class="body">
+              <div class="row between">
+                <span class="hint">格式化结果</span>
+                <span class="row">
+                  <button class="tiny" id="m3_copy">复制</button>
+                  <button class="tiny" id="m3_csv">CSV</button>
+                  <button class="tiny" id="m3_json">JSON</button>
+                  <button class="tiny" id="m3_png">PNG</button>
+                  <button class="tiny" id="m3_print">打印</button>
+                </span>
+              </div>
+              <pre class="report" id="m3_report">等待计算…</pre>
+            </div>
+            <div class="body">
+              <details class="adv">
+                <summary>详细统计量与逐点数据</summary>
+                <div class="advbody scroll tall" id="m3_stats"></div>
+              </details>
+            </div>
+          </div>
+          <div class="card">
+            <h2>4 · 图</h2>
+            <div class="chartwrap"><canvas id="m3_chart" data-h="420"></canvas></div>
+            <div class="chartwrap" style="padding-top:0"><canvas id="m3_resid" data-h="180"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== 原理 -->
+    <section class="pane" id="pane-about">
+      <div class="card doc"><div class="body">
+        <h3>三个模块分别对应仓库里的哪个脚本</h3>
+        <table class="data">
+          <thead><tr><th>模块</th><th>原脚本</th><th>待求参数</th><th>输入</th><th>输出</th></tr></thead>
+          <tbody>
+            <tr><td>① 自由拟合</td><td>3_Non_Linear_Regression.py</td><td>D₀, r₀, E</td><td>ri, Di, 1s, T, P</td><td>三个参数 ± 1σ + 图</td></tr>
+            <tr><td>② 约束拟合</td><td>4_Non_Linear_Regression_Constrained.py</td><td>D₀, r₀</td><td>ri, Di, 1s, T, Q</td><td>D₀, r₀ ± 1σ，E 由 Q 推出</td></tr>
+            <tr><td>③ REE 温度计</td><td>T_Calc_Application.py</td><td>T</td><td>ri + 各样品 D</td><td>每个样品的 T ± 1σ</td></tr>
+          </tbody>
+        </table>
+
+        <h3>模型与公式</h3>
+        <p>Brice (1975) 晶格应变模型，经 Blundy &amp; Wood (1994, 1997) 用于微量元素分配：</p>
+        <div class="math mono">D_i = D₀ · exp[ −4πE·N<sub>A</sub>/(R·T) · ( ½·r₀·(r_i−r₀)² + ⅓·(r_i−r₀)³ ) ]</div>
+        <p>原脚本把 −4πE·N<sub>A</sub>/(R·T) 合并为一个待拟合的形状参数，拟合完成后用下式换算回 GPa：</p>
+        <div class="math mono">E[GPa] = E_fit · R·T/N<sub>A</sub> · 10²¹　（R = 8.314472 J·K⁻¹·mol⁻¹，N<sub>A</sub> = 6.02214086×10²³）</div>
+        <p>约束版把 E 与 r₀ 绑定（E 由 Q 决定，位点半径取 1.38 Å）：</p>
+        <div class="math mono">E = Q / ((1.38 + r₀)·10⁻¹⁰)³ / 10⁹　[GPa]，　Q₁ = 6489×10⁻²¹ J，Q₂ = 7827×10⁻²¹ J</div>
+        <p>温度计则把 D₀ 写成温度的显函数，只留下 T 一个未知量：</p>
+        <div class="math mono">D_i = exp(A/T + B) · exp[ (k/T)·( ½·r₀·(r_i−r₀)² + ⅓·(r_i−r₀)³ ) / (1.38+r₀)³ ]，　k = −4πN<sub>A</sub>Q/R</div>
+
+        <h3>求解器：与原脚本的差别</h3>
+        <p>原脚本调用 <code>scipy.optimize.curve_fit</code>，且把迭代上限写成 <code>maxfev=50</code>。本工具改为自研的有界 Levenberg–Marquardt + 高斯-牛顿抛光，收敛判据不用梯度范数（本问题 JᵀJ 量级跨度极大，梯度范数不是可靠判据），而是直接验证最优性：在 ±1×10⁻⁸ 相对窗口内逐参数扰动，找不到更低的加权 SSR 即判定收敛。</p>
+        <div class="note">实测（示例数据，见 <code>webgui/test_math.js</code>，77 项对照全部通过）：本工具解与 scipy 紧容差最优解的最大相对偏差为 <b>6.3×10⁻¹⁰</b>；并且本工具解的加权 SSR <b>更低</b>（7.14511214444633×10⁻¹ 对 7.14511214444635×10⁻¹），即已到双精度噪声底。原脚本默认设置（maxfev=50）的解与真最优解相差约 2×10⁻⁶ 相对 —— 在原脚本输出的 2–3 位小数上不可见，但说明它没有跑透。</div>
+        <p>浏览器内的自检（本页底部「运行」或地址栏加 <code>#selftest</code>）会核对 11 个硬编码参考值、正演–反演闭合、5 个标签页切换、6 张图表是否真的绘制，共 15 项。</p>
+
+        <h3>统计量怎么读</h3>
+        <ul>
+          <li><b>χ²/dof</b> = Σ[(D_obs − D_calc)/σ]² / 自由度：若 1σ 是真实误差，该值应接近 1；远大于 1 说明误差被低估或模型不适合。</li>
+          <li><b>RMSWD</b>（加权残差均方根）= √(χ²/N)：同样应接近 1，更直观。</li>
+          <li><b>R²(log₁₀D)</b>、<b>RMS(log₁₀D)</b>：在对数域（地球化学常规轴）评价拟合优劣。</li>
+          <li>标准误取 <code>pcov = (JᵀJ)⁻¹</code> 对角线的平方根；误差标度选「按 χ² 缩放」时再乘 χ²/dof（即 scipy 的 <code>absolute_sigma=False</code>）。</li>
+        </ul>
+
+        <h3>数据格式</h3>
+        <p>① ②（可直接从 Excel 复制粘贴，或拖入 .xlsx / .csv）：</p>
+        <pre class="report">Element    ri      Di      1s
+Sc         0.870   0.9400  0.5700
+La         1.160   0.0015  0.0014
+...（ri 缺省时可按元素名自动补全 Shannon VIII 半径）</pre>
+        <p>③（第一列半径，其后每列一个样品）：</p>
+        <pre class="report">Radii   D(Sample 1)   D(Sample 2)
+1.160   0.0103        0.1187
+1.143   0.7308        0.8729
+...</pre>
+
+        <h3>已知局限</h3>
+        <ul>
+          <li>压力 P 在原模型里不参与计算，仅作为图上标注；这与原脚本一致。</li>
+          <li>温度计反演对 D 的误差结构敏感：原脚本不提供 σ，误差标度默认按 χ² 缩放，得到的 ±1σ 只反映「点分散度」，不是真实的地质不确定度。</li>
+          <li>若某样品的数据点过少（&lt; 4）或半径分布过窄，拟合会触及参数边界，界面会给出警告。</li>
+          <li>只读取 xlsx 的第一个工作表；旧版 .xls 不支持，请另存为 .xlsx 或 .csv。</li>
+        </ul>
+
+        <h3>出处</h3>
+        <p>算法与示例数据来自 Streicher, L.B., van Westrenen, W., Hanchar, J.M., Brouwer, F.M. (2023) <i>GCA</i> 346, 54–64（doi:10.1016/j.gca.2023.01.030）配套代码，原作者 Linus Streicher（VU Amsterdam）。示例数据取自 Burnham &amp; Berry (2012) <i>GCA</i> 95, 196–212。</p>
+      </div></div>
+      <div class="card" id="selftestCard" style="margin-top:14px">
+        <h2>内置自检 <button class="tiny" id="btnSelftest2">运行</button></h2>
+        <div class="body"><div id="selftestOut" class="mono" style="font-size:12px;color:var(--muted)">尚未运行。也可在地址栏后加 <code>#selftest</code> 自动运行。</div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>/*@DATA@*/</script>
+<script>/*@MATH@*/</script>
+<script>/*@APP@*/</script>
+</body>
+</html>
